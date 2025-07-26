@@ -41,9 +41,9 @@ export default function NoSuraModal({
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      const downloadUrl = await getDownloadKLink( surahId, reciter);
+      const downloadUrl = await getDownloadKLink( reciter, surahId);
       const dirUri = await getFolderPath(reciter);
-      const downloadPath = await getFilePath(surahId, reciter);
+      const downloadPath = await getFilePath(reciter, surahId);
 
       const dirInfo = await FileSystem.getInfoAsync(dirUri);
 

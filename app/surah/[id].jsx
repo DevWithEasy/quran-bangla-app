@@ -11,8 +11,9 @@ import NoSuraModal from "../../components/NoSuraModal";
 import QuranHeader from "../../components/QuranHeader";
 import SuraInfo from "../../components/SuraInfo";
 import {
-  checkFileExist,
+  checkAudioFileExist,
   getFilePath,
+  getJsonData,
   getTiming,
 } from "../../utils/audioControllers";
 
@@ -43,15 +44,8 @@ export default function SurahScreen() {
         if (!fileInfo.exists) {
           throw new Error("Ayah data not found");
         }
+        setAyahs(await getJsonData(ayahFilePath));
 
-        const ayahContent = await FileSystem.readAsStringAsync(ayahFilePath);
-        const parsedAyahs = JSON.parse(ayahContent);
-        
-        if (Array.isArray(parsedAyahs)) {
-          setAyahs(parsedAyahs);
-        } else {
-          throw new Error("Invalid ayah data format");
-        }
       } catch (error) {
         console.error("DB error:", error);
         Alert.alert("ত্রুটি", "আয়াত ডাটা লোড করতে ব্যর্থ");
@@ -84,7 +78,7 @@ export default function SurahScreen() {
     }
   };
 
-  const playAyah = async (ayah) => {
+  const playAyah = async (surah_id,ayah) => {
     try {
       // If same ayah is playing, stop it
       if (currentAyahId === ayah.id && isPlaying) {
@@ -92,7 +86,7 @@ export default function SurahScreen() {
         return;
       }
 
-      const exist = await checkFileExist(ayah.surah_id, reciter);
+      const exist = await checkAudioFileExist(reciter,surah_id);
       if (!exist) {
         setModalVisible(true);
         return;
@@ -100,11 +94,11 @@ export default function SurahScreen() {
 
       await stopAudio(); // Stop previous audio
 
-      const audioPath = await getFilePath(ayah.surah_id, reciter);
-      const timings = await getTiming(ayah.surah_id, reciter);
+      const audioPath = await getFilePath(reciter, surah_id);
+      const timings = await getTiming(reciter,surah_id);
 
-      const currentAyah = timings.find((item) => item.ayah === ayah.ayah_id);
-      const nextAyah = timings.find((item) => item.ayah === ayah.ayah_id + 1);
+      const currentAyah = timings.find((item) => item.ayah === ayah.id);
+      const nextAyah = timings.find((item) => item.ayah === ayah.id + 1);
 
       const startTime = currentAyah.time;
       const endTime = nextAyah ? nextAyah.time : null;

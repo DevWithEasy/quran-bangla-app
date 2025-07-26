@@ -61,6 +61,16 @@ export default function RootLayout() {
             },
           }}
         />
+        <Stack.Screen
+          name="download"
+          options={{
+            headerTitle: "ডাটাবেজ ফাইল ডাউনলোড",
+            headerTitleStyle: {
+              fontFamily: "banglaRegular",
+              color: "#138d75",
+            },
+          }}
+        />
       </Stack>
       <Toast />
     </>

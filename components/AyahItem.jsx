@@ -14,9 +14,22 @@ import {
 import Toast from "react-native-toast-message";
 import useSettingsStore from "../store/settingsStore";
 
-export default function AyahItem({ surah, ayah, onPlay, isPlaying, stopAudio }) {
-  const { arabicFont, arabicFontSize, banglaFontSize, translator } =
-    useSettingsStore();
+export default function AyahItem({
+  surah,
+  ayah,
+  onPlay,
+  isPlaying,
+  stopAudio,
+}) {
+  const {
+    arabicFont,
+    arabicFontSize,
+    banglaFontSize,
+    translator,
+    showBanglaTranslation,
+    showBanglaTafseer,
+    showEnglishTranslation,
+  } = useSettingsStore();
   const [modalVisible, setModalVisible] = useState(false);
 
   const router = useRouter();
@@ -99,12 +112,21 @@ export default function AyahItem({ surah, ayah, onPlay, isPlaying, stopAudio }) 
         >
           {ayah.ar}
         </Text>
-        <Text style={[styles.translation, { fontSize: banglaFontSize }]}>
-          {ayah.tr}
-        </Text>
-        <Text style={[styles.translation, { fontSize: banglaFontSize }]}>
-          {translator === "bn_muhi" ? ayah.bn_muhi : ayah.bn_haque}
-        </Text>
+        {showBanglaTranslation && (
+          <Text style={[styles.translation, { fontSize: banglaFontSize }]}>
+            {ayah.tr}
+          </Text>
+        )}
+        {showBanglaTafseer && (
+          <Text style={[styles.translation, { fontSize: banglaFontSize }]}>
+            {translator === "bn_muhi" ? ayah.bn_muhi : ayah.bn_haque}
+          </Text>
+        )}
+        {showEnglishTranslation && (
+          <Text style={[styles.translation, { fontSize: banglaFontSize }]}>
+            {ayah.en}
+          </Text>
+        )}
       </View>
 
       {/* Options Modal */}
@@ -116,7 +138,6 @@ export default function AyahItem({ surah, ayah, onPlay, isPlaying, stopAudio }) 
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-
             {/* Play / Pause button */}
             <TouchableOpacity
               style={styles.modalOption}
@@ -124,13 +145,17 @@ export default function AyahItem({ surah, ayah, onPlay, isPlaying, stopAudio }) 
                 if (isPlaying) {
                   stopAudio();
                 } else {
-                  onPlay(ayah);
+                  onPlay(surah.serial, ayah);
                 }
                 setModalVisible(false);
               }}
             >
               <Ionicons
-                name={isPlaying ? "pause-circle-outline" : "caret-forward-circle-outline"}
+                name={
+                  isPlaying
+                    ? "pause-circle-outline"
+                    : "caret-forward-circle-outline"
+                }
                 size={20}
                 color="#333"
               />
@@ -186,7 +211,6 @@ export default function AyahItem({ surah, ayah, onPlay, isPlaying, stopAudio }) 
                 বন্ধ করুন
               </Text>
             </TouchableOpacity>
-
           </View>
         </View>
       </Modal>
@@ -233,7 +257,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: "#333",
     marginBottom: 8,
-    fontFamily: "banglaRegular"
+    fontFamily: "banglaRegular",
   },
   modalContainer: {
     flex: 1,

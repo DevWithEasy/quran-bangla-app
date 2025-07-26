@@ -116,7 +116,7 @@ export default function AudioBook() {
   }, []);
 
   const getAudioUri = (surah) =>
-    `${FileSystem.documentDirectory}APP_DATA/audio/${selectedReciter}/${surah.serial}.mp3`;
+    `${DATA_PATH}/audio_quran/${selectedReciter}/${surah.serial}.mp3`;
 
   const playSurah = async (surah) => {
     try {

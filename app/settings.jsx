@@ -1,17 +1,18 @@
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
+import * as FileSystem from 'expo-file-system';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from 'react-native';
-import * as FileSystem from 'expo-file-system';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import useSettingsStore from '../store/settingsStore';
+import { getJsonData } from '../utils/audioControllers';
 
 export default function SettingsScreen() {
   const {
@@ -20,6 +21,9 @@ export default function SettingsScreen() {
     arabicFontSize,
     banglaFontSize,
     translator,
+    showBanglaTranslation,
+    showBanglaTafseer,
+    showEnglishTranslation,
     loadSettings,
     updateSetting,
   } = useSettingsStore();
@@ -67,14 +71,8 @@ export default function SettingsScreen() {
           throw new Error("Reciters data not found");
         }
 
-        const recitersContent = await FileSystem.readAsStringAsync(recitersPath);
-        const parsedReciters = JSON.parse(recitersContent);
-
-        if (Array.isArray(parsedReciters)) {
-          setReciters(parsedReciters);
-        } else {
-          throw new Error("Invalid reciters data format");
-        }
+        setReciters(await getJsonData(recitersPath))
+        
       } catch (error) {
         console.error('ডাটাবেস ত্রুটি:', error);
         Alert.alert(
@@ -119,7 +117,7 @@ export default function SettingsScreen() {
             dropdownIconColor="#138d75"
           >
             {reciters.map((r) => (
-              <Picker.Item key={r.id} label={r.name} value={r.id} />
+              <Picker.Item key={r.id} label={r.name} value={r.id} style={{fontFamily : 'banglaRegular'}}/>
             ))}
           </Picker>
         </View>
@@ -192,6 +190,41 @@ export default function SettingsScreen() {
         />
       </View>
 
+      {/* অনুবাদ সেটিংস */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>অনুবাদ সেটিংস</Text>
+        
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>বাংলা অনুবাদ দেখান</Text>
+          <Switch
+            value={showBanglaTranslation}
+            onValueChange={(value) => updateSetting('showBanglaTranslation', value)}
+            trackColor={{ false: "#767577", true: "#138d75" }}
+            thumbColor={showBanglaTranslation ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>বাংলা তাফসীর দেখান</Text>
+          <Switch
+            value={showBanglaTafseer}
+            onValueChange={(value) => updateSetting('showBanglaTafseer', value)}
+            trackColor={{ false: "#767577", true: "#138d75" }}
+            thumbColor={showBanglaTafseer ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>ইংরেজি অনুবাদ দেখান</Text>
+          <Switch
+            value={showEnglishTranslation}
+            onValueChange={(value) => updateSetting('showEnglishTranslation', value)}
+            trackColor={{ false: "#767577", true: "#138d75" }}
+            thumbColor={showEnglishTranslation ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+      </View>
+
       {/* টেক্সট প্রিভিউ */}
       <View style={styles.previewSection}>
         <Text style={styles.previewTitle}>টেক্সট প্রিভিউ</Text>
@@ -206,17 +239,32 @@ export default function SettingsScreen() {
         >
           بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
         </Text>
-        <Text
-          style={[
-            styles.banglaPreview,
-            {
-              fontSize: localBanglaFontSize,
-              fontFamily: 'banglaRegular',
-            },
-          ]}
-        >
-          পরম করুণাময় অসীম দয়ালু আল্লাহর নামে
-        </Text>
+        {showBanglaTranslation && (
+          <Text
+            style={[
+              styles.banglaPreview,
+              {
+                fontSize: localBanglaFontSize,
+                fontFamily: 'banglaRegular',
+              },
+            ]}
+          >
+            পরম করুণাময় অসীম দয়ালু আল্লাহর নামে
+          </Text>
+        )}
+        {showEnglishTranslation && (
+          <Text
+            style={[
+              styles.englishPreview,
+              {
+                fontSize: localBanglaFontSize - 2,
+                fontFamily: 'englishRegular',
+              },
+            ]}
+          >
+            In the name of Allah, the Most Gracious, the Most Merciful
+          </Text>
+        )}
       </View>
     </ScrollView>
   );
@@ -267,6 +315,17 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 40,
   },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  switchLabel: {
+    fontSize: 14,
+    fontFamily: 'banglaRegular',
+    color: '#2c3e50',
+  },
   previewSection: {
     marginTop: 16,
     backgroundColor: 'white',
@@ -293,5 +352,12 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
     lineHeight: 24,
     fontFamily: 'banglaRegular',
+  },
+  englishPreview: {
+    textAlign: 'left',
+    color: '#2c3e50',
+    lineHeight: 22,
+    fontFamily: 'englishRegular',
+    marginTop: 8,
   },
 });

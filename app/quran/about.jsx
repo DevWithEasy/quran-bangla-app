@@ -1,11 +1,10 @@
-import { View, Text, ScrollView, StyleSheet, Linking, TouchableOpacity } from 'react-native';
-import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function About() {
   const openWebsite = () => {
-    Linking.openURL('https://devwitheasy.vercel.app');
+    Linking.openURL('https://codeorbitstudiobd.vercel.app');
   };
 
   const contactDeveloper = () => {
@@ -119,8 +118,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontFamily: 'banglaBold',
-    fontSize: 16,
+    fontFamily: 'banglaSemiBold',
   },
   footer: {
     marginTop: 16,

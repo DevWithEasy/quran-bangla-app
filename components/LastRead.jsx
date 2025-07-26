@@ -1,12 +1,13 @@
+import { toBengaliNumber } from 'bengali-number';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-export default function LastRead() {
+export default function LastRead({surah}) {
   return (
     <View style={styles.lastReadContainer}>
       <View style={styles.textContainer}>
         <Text style={styles.label}>সর্বশেষ পড়েছেন</Text>
-        <Text style={styles.suraName}>সূরা ফাতিহা</Text>
-        <Text style={styles.suraAyah}>আয়াত - ৭</Text>
+        <Text style={styles.suraName}>{surah.name_bn}</Text>
+        <Text style={styles.suraAyah}>আয়াত - {toBengaliNumber(surah.total_ayah)}</Text>
       </View>
       <Image 
         source={require('../assets/images/quran_read.png')}

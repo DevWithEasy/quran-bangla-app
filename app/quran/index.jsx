@@ -17,10 +17,12 @@ import SuraItem from "../../components/SuraItem";
 import SuraLoadingScreen from "../../components/SuraLoadingScreen";
 import * as FileSystem from "expo-file-system";
 import { reciterFiles, SURA_FILES, SURAH_FILES } from "../../utils/folderFiles";
+import useSettingsStore from "../../store/settingsStore";
 
 const SURAH_PATH = `${FileSystem.documentDirectory}APP_DATA/surah.json`;
 
 export default function Quran() {
+  const {lastSura} = useSettingsStore();
   const navigation = useNavigation();
   const router = useRouter();
   const [surahs, setSurahs] = useState([]);
@@ -136,7 +138,7 @@ export default function Quran() {
       </View>
 
       <ScrollView style={styles.container}>
-        <LastRead />
+        {lastSura && <LastRead surah = {lastSura}/>}
         {surahs.map((item) => (
           <SuraItem key={item.serial} item={item} />
         ))}

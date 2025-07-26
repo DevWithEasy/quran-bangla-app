@@ -2,11 +2,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { toBengaliNumber } from "bengali-number";
 import { useRouter } from "expo-router";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import useSettingsStore from "../store/settingsStore";
 
 export default function SuraItem({ item }) {
+  const { updateSetting } = useSettingsStore();
   const router = useRouter();
   const handleSurahPress = async(surahItem) => {
-    await AsyncStorage.setItem('lastReadSurah', JSON.stringify(surahItem));
+    updateSetting("lastSura", surahItem);
     router.push({
       pathname: `/surah/${surahItem.serial}`,
       params: {
