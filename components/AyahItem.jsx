@@ -37,11 +37,11 @@ export default function AyahItem({
   const copyAyah = async () => {
     try {
       const ayahText = `${surah.name_bn} ${toBengaliNumber(
-        ayah.surah_id
-      )}:${toBengaliNumber(ayah.ayah_id)}\n\n${ayah.arabic}\n\n${
-        ayah.tr_ar
+        surah.serial
+      )}:${toBengaliNumber(ayah.id)}\n\n${ayah.ar}\n\n${
+        ayah.tr
       }\n\n${
-        translator === "tr_bn_muhi" ? ayah.tr_bn_muhi : ayah.tr_bn_haque
+        translator === "bn_muhi" ? ayah.bn_muhi : ayah.bn_haque
       }\n\nসোর্স : কুরআন বাংলা অ্যাপ`;
       await Clipboard.setStringAsync(ayahText);
       Toast.show({
@@ -62,12 +62,12 @@ export default function AyahItem({
   const shareAyah = async () => {
     try {
       const ayahText = [
-        `${surah.name_bn} ${toBengaliNumber(ayah.surah_id)}:${toBengaliNumber(
-          ayah.ayah_id
+        `${surah.name_bn} ${toBengaliNumber(surah.serial)}:${toBengaliNumber(
+          ayah.id
         )}`,
-        ayah.arabic,
-        ayah.tr_ar,
-        translator === "tr_bn_muhi" ? ayah.tr_bn_muhi : ayah.tr_bn_haque,
+        ayah.ar,
+        ayah.tr,
+        translator === "bn_muhi" ? ayah.bn_muhi : ayah.bn_haque,
         "সোর্স : কুরআন বাংলা অ্যাপ",
       ].join("\n\n");
 

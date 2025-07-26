@@ -1,7 +1,7 @@
-import Slider from '@react-native-community/slider';
-import { Picker } from '@react-native-picker/picker';
-import * as FileSystem from 'expo-file-system';
-import { useEffect, useState } from 'react';
+import Slider from "@react-native-community/slider";
+import { Picker } from "@react-native-picker/picker";
+import * as FileSystem from "expo-file-system";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -10,9 +10,9 @@ import {
   Switch,
   Text,
   View,
-} from 'react-native';
-import useSettingsStore from '../store/settingsStore';
-import { getJsonData } from '../utils/audioControllers';
+} from "react-native";
+import useSettingsStore from "../store/settingsStore";
+import { getJsonData } from "../utils/audioControllers";
 
 export default function SettingsScreen() {
   const {
@@ -32,20 +32,22 @@ export default function SettingsScreen() {
   const [loading, setLoading] = useState(true);
 
   const arabicFonts = [
-    { id: 1, name: 'me-quran', title: 'মে কুরআন' },
-    { id: 2, name: 'noorehidayat', title: 'নূর হিদায়াত' },
-    { id: 3, name: 'noorehira', title: 'নূর হিরা' },
-    { id: 4, name: 'noorehuda', title: 'নূর হুদা' },
-    { id: 5, name: 'qalam', title: 'কলম' },
+    { id: 1, name: "me-quran", title: "মে কুরআন" },
+    { id: 2, name: "noorehidayat", title: "নূর হিদায়াত" },
+    { id: 3, name: "noorehira", title: "নূর হিরা" },
+    { id: 4, name: "noorehuda", title: "নূর হুদা" },
+    { id: 5, name: "qalam", title: "কলম" },
   ];
 
   const translators = [
-    { label: 'ডঃ জহুরুল হক', value: 'bn_haque' },
-    { label: 'মহিউদ্দীন খান', value: 'bn_muhi' },
+    { label: "ডঃ জহুরুল হক", value: "bn_haque" },
+    { label: "মহিউদ্দীন খান", value: "bn_muhi" },
   ];
 
-  const [localArabicFontSize, setLocalArabicFontSize] = useState(arabicFontSize);
-  const [localBanglaFontSize, setLocalBanglaFontSize] = useState(banglaFontSize);
+  const [localArabicFontSize, setLocalArabicFontSize] =
+    useState(arabicFontSize);
+  const [localBanglaFontSize, setLocalBanglaFontSize] =
+    useState(banglaFontSize);
 
   useEffect(() => {
     setLocalArabicFontSize(arabicFontSize);
@@ -66,25 +68,20 @@ export default function SettingsScreen() {
         // Load reciters data from JSON file
         const recitersPath = `${FileSystem.documentDirectory}APP_DATA/reciters.json`;
         const fileInfo = await FileSystem.getInfoAsync(recitersPath);
-        
+
         if (!fileInfo.exists) {
           throw new Error("Reciters data not found");
         }
 
-        setReciters(await getJsonData(recitersPath))
-        
+        setReciters(await getJsonData(recitersPath));
       } catch (error) {
-        console.error('ডাটাবেস ত্রুটি:', error);
-        Alert.alert(
-          'ত্রুটি', 
-          'ক্বারীদের তালিকা লোড করতে ব্যর্থ',
-          [
-            {
-              text: "পুনরায় চেষ্টা করুন",
-              onPress: () => loadData(),
-            }
-          ]
-        );
+        console.error("ডাটাবেস ত্রুটি:", error);
+        Alert.alert("ত্রুটি", "ক্বারীদের তালিকা লোড করতে ব্যর্থ", [
+          {
+            text: "পুনরায় চেষ্টা করুন",
+            onPress: () => loadData(),
+          },
+        ]);
       } finally {
         setLoading(false);
       }
@@ -104,6 +101,45 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      {/* অনুবাদ সেটিংস */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>অনুবাদ সেটিংস</Text>
+
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>বাংলা অনুবাদ দেখান</Text>
+          <Switch
+            value={showBanglaTranslation}
+            onValueChange={(value) =>
+              updateSetting("showBanglaTranslation", value)
+            }
+            trackColor={{ false: "#767577", true: "#138d75" }}
+            thumbColor={showBanglaTranslation ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>বাংলা তাফসীর দেখান</Text>
+          <Switch
+            value={showBanglaTafseer}
+            onValueChange={(value) => updateSetting("showBanglaTafseer", value)}
+            trackColor={{ false: "#767577", true: "#138d75" }}
+            thumbColor={showBanglaTafseer ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>ইংরেজি অনুবাদ দেখান</Text>
+          <Switch
+            value={showEnglishTranslation}
+            onValueChange={(value) =>
+              updateSetting("showEnglishTranslation", value)
+            }
+            trackColor={{ false: "#767577", true: "#138d75" }}
+            thumbColor={showEnglishTranslation ? "#f4f3f4" : "#f4f3f4"}
+          />
+        </View>
+      </View>
+
       {/* ক্বারী নির্বাচন */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ক্বারী নির্বাচন</Text>
@@ -111,13 +147,18 @@ export default function SettingsScreen() {
           <Picker
             selectedValue={reciter}
             onValueChange={(itemValue) => {
-              updateSetting('reciter', itemValue);
+              updateSetting("reciter", itemValue);
             }}
             style={styles.picker}
             dropdownIconColor="#138d75"
           >
             {reciters.map((r) => (
-              <Picker.Item key={r.id} label={r.name} value={r.id} style={{fontFamily : 'banglaRegular'}}/>
+              <Picker.Item
+                key={r.id}
+                label={r.name}
+                value={r.id}
+                style={{ fontFamily: "banglaRegular" }}
+              />
             ))}
           </Picker>
         </View>
@@ -129,7 +170,9 @@ export default function SettingsScreen() {
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={translator}
-            onValueChange={(itemValue) => updateSetting('translator', itemValue)}
+            onValueChange={(itemValue) =>
+              updateSetting("translator", itemValue)
+            }
             style={styles.picker}
             dropdownIconColor="#138d75"
           >
@@ -146,7 +189,9 @@ export default function SettingsScreen() {
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={arabicFont}
-            onValueChange={(itemValue) => updateSetting('arabicFont', itemValue)}
+            onValueChange={(itemValue) =>
+              updateSetting("arabicFont", itemValue)
+            }
             style={styles.picker}
           >
             {arabicFonts.map((font) => (
@@ -158,7 +203,9 @@ export default function SettingsScreen() {
 
       {/* আরবি ফন্ট সাইজ */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>আরবি ফন্ট সাইজ: {localArabicFontSize}</Text>
+        <Text style={styles.sectionTitle}>
+          আরবি ফন্ট সাইজ: {localArabicFontSize}
+        </Text>
         <Slider
           style={styles.slider}
           minimumValue={20}
@@ -166,7 +213,7 @@ export default function SettingsScreen() {
           step={1}
           value={localArabicFontSize}
           onValueChange={(value) => setLocalArabicFontSize(value)}
-          onSlidingComplete={(value) => updateSetting('arabicFontSize', value)}
+          onSlidingComplete={(value) => updateSetting("arabicFontSize", value)}
           minimumTrackTintColor="#138d75"
           maximumTrackTintColor="#d3d3d3"
           thumbTintColor="#138d75"
@@ -175,7 +222,9 @@ export default function SettingsScreen() {
 
       {/* বাংলা ফন্ট সাইজ */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>বাংলা ফন্ট সাইজ: {localBanglaFontSize}</Text>
+        <Text style={styles.sectionTitle}>
+          বাংলা ফন্ট সাইজ: {localBanglaFontSize}
+        </Text>
         <Slider
           style={styles.slider}
           minimumValue={16}
@@ -183,46 +232,11 @@ export default function SettingsScreen() {
           step={1}
           value={localBanglaFontSize}
           onValueChange={(value) => setLocalBanglaFontSize(value)}
-          onSlidingComplete={(value) => updateSetting('banglaFontSize', value)}
+          onSlidingComplete={(value) => updateSetting("banglaFontSize", value)}
           minimumTrackTintColor="#138d75"
           maximumTrackTintColor="#d3d3d3"
           thumbTintColor="#138d75"
         />
-      </View>
-
-      {/* অনুবাদ সেটিংস */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>অনুবাদ সেটিংস</Text>
-        
-        <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>বাংলা অনুবাদ দেখান</Text>
-          <Switch
-            value={showBanglaTranslation}
-            onValueChange={(value) => updateSetting('showBanglaTranslation', value)}
-            trackColor={{ false: "#767577", true: "#138d75" }}
-            thumbColor={showBanglaTranslation ? "#f4f3f4" : "#f4f3f4"}
-          />
-        </View>
-
-        <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>বাংলা তাফসীর দেখান</Text>
-          <Switch
-            value={showBanglaTafseer}
-            onValueChange={(value) => updateSetting('showBanglaTafseer', value)}
-            trackColor={{ false: "#767577", true: "#138d75" }}
-            thumbColor={showBanglaTafseer ? "#f4f3f4" : "#f4f3f4"}
-          />
-        </View>
-
-        <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>ইংরেজি অনুবাদ দেখান</Text>
-          <Switch
-            value={showEnglishTranslation}
-            onValueChange={(value) => updateSetting('showEnglishTranslation', value)}
-            trackColor={{ false: "#767577", true: "#138d75" }}
-            thumbColor={showEnglishTranslation ? "#f4f3f4" : "#f4f3f4"}
-          />
-        </View>
       </View>
 
       {/* টেক্সট প্রিভিউ */}
@@ -245,7 +259,7 @@ export default function SettingsScreen() {
               styles.banglaPreview,
               {
                 fontSize: localBanglaFontSize,
-                fontFamily: 'banglaRegular',
+                fontFamily: "banglaRegular",
               },
             ]}
           >
@@ -258,7 +272,7 @@ export default function SettingsScreen() {
               styles.englishPreview,
               {
                 fontSize: localBanglaFontSize - 2,
-                fontFamily: 'englishRegular',
+                fontFamily: "englishRegular",
               },
             ]}
           >
@@ -273,62 +287,62 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     padding: 16,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#333',
-    fontFamily: 'banglaRegular',
+    color: "#333",
+    fontFamily: "banglaRegular",
   },
   section: {
     marginBottom: 16,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
     padding: 16,
     elevation: 2,
   },
   sectionTitle: {
     fontSize: 16,
-    fontFamily: 'banglaSemiBold',
+    fontFamily: "banglaSemiBold",
     marginBottom: 12,
-    color: '#2c3e50',
+    color: "#2c3e50",
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   picker: {
-    width: '100%',
-    color: '#333',
+    width: "100%",
+    color: "#333",
   },
   slider: {
-    width: '100%',
+    width: "100%",
     height: 40,
   },
   switchContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   switchLabel: {
     fontSize: 14,
-    fontFamily: 'banglaRegular',
-    color: '#2c3e50',
+    fontFamily: "banglaRegular",
+    color: "#2c3e50",
   },
   previewSection: {
     marginTop: 16,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
     padding: 16,
     elevation: 2,
@@ -336,28 +350,28 @@ const styles = StyleSheet.create({
   },
   previewTitle: {
     fontSize: 16,
-    fontFamily: 'banglaSemiBold',
+    fontFamily: "banglaSemiBold",
     marginBottom: 12,
-    color: '#2c3e50',
+    color: "#2c3e50",
   },
   arabicPreview: {
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    textAlign: "right",
+    writingDirection: "rtl",
     marginBottom: 16,
-    color: '#2c3e50',
+    color: "#2c3e50",
     lineHeight: 30,
   },
   banglaPreview: {
-    textAlign: 'left',
-    color: '#2c3e50',
+    textAlign: "left",
+    color: "#2c3e50",
     lineHeight: 24,
-    fontFamily: 'banglaRegular',
+    fontFamily: "banglaRegular",
   },
   englishPreview: {
-    textAlign: 'left',
-    color: '#2c3e50',
+    textAlign: "left",
+    color: "#2c3e50",
     lineHeight: 22,
-    fontFamily: 'englishRegular',
+    fontFamily: "englishRegular",
     marginTop: 8,
   },
 });

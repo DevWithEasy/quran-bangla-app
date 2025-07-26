@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions } from "@react-navigation/native";
+import * as FileSystem from "expo-file-system";
 import { useNavigation, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -15,9 +16,8 @@ import LastRead from "../../components/LastRead";
 import SearchModal from "../../components/SearchModal";
 import SuraItem from "../../components/SuraItem";
 import SuraLoadingScreen from "../../components/SuraLoadingScreen";
-import * as FileSystem from "expo-file-system";
-import { reciterFiles, SURA_FILES, SURAH_FILES } from "../../utils/folderFiles";
 import useSettingsStore from "../../store/settingsStore";
+import LastHeader from "../../components/LastHeader";
 
 const SURAH_PATH = `${FileSystem.documentDirectory}APP_DATA/surah.json`;
 
@@ -138,7 +138,7 @@ export default function Quran() {
       </View>
 
       <ScrollView style={styles.container}>
-        {lastSura && <LastRead surah = {lastSura}/>}
+        {!lastSura ? <LastHeader/> :  <LastRead surah = {lastSura}/>}
         {surahs.map((item) => (
           <SuraItem key={item.serial} item={item} />
         ))}

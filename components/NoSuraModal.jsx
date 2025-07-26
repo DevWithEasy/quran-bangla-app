@@ -1,5 +1,6 @@
 import * as FileSystem from "expo-file-system";
 import { useEffect, useState, useRef } from "react";
+import * as Network from "expo-network";
 import {
   ActivityIndicator,
   Alert,
@@ -29,19 +30,39 @@ export default function NoSuraModal({
   const downloadResumableRef = useRef(null);
 
   useEffect(() => {
-    // মডাল খোলা হলে আর কোন প্রগ্রেস রিসেট করতে চাই
     if (!modalVisible) {
       setIsDownloading(false);
       setDownloadProgress(0);
     }
   }, [modalVisible]);
 
+  const checkInternet = async () => {
+    const { isInternetReachable } = await Network.getNetworkStateAsync();
+    return isInternetReachable;
+  };
+
   const handleDownload = async () => {
     try {
+      const isConnected = await checkInternet();
+      if (!isConnected) {
+        Alert.alert(
+          "ডাউনলোড ব্যর্থ",
+          "দয়া করে ইন্টারনেট সংযোগ পরীক্ষা করুন এবং আবার চেষ্টা করুন",
+          [
+            { text: "আবার চেষ্টা করুন", onPress: handleDownload },
+            {
+              text: "বাতিল করুন",
+              style: "cancel",
+              onPress: onDownloadCancelled,
+            },
+          ]
+        );
+        return;
+      }
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      const downloadUrl = await getDownloadKLink( reciter, surahId);
+      const downloadUrl = await getDownloadKLink(reciter, surahId);
       const dirUri = await getFolderPath(reciter);
       const downloadPath = await getFilePath(reciter, surahId);
 
@@ -57,7 +78,8 @@ export default function NoSuraModal({
         {},
         (progress) => {
           const progressPercent =
-            (progress.totalBytesWritten / progress.totalBytesExpectedToWrite) * 100;
+            (progress.totalBytesWritten / progress.totalBytesExpectedToWrite) *
+            100;
           setDownloadProgress(progressPercent);
         }
       );
@@ -85,8 +107,7 @@ export default function NoSuraModal({
   const cancelDownload = async () => {
     if (downloadResumableRef.current) {
       try {
-        // ডাউনলোডキャンセル করার জন্য ডাউনলোড রিসুমেবল কে লগ্ন করবো
-        await downloadResumableRef.current.pauseAsync?.(); // pauseAsync ভ্যারিয়েশন থাকতে পারে।
+        await downloadResumableRef.current.pauseAsync?.();
         downloadResumableRef.current = null;
         Toast.show({
           type: "info",
@@ -119,9 +140,7 @@ export default function NoSuraModal({
     >
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          <Text style={styles.modalText}>
-            এই সূরার অডিও ডাউনলোড করা হয়নি!
-          </Text>
+          <Text style={styles.modalText}>এই সূরার অডিও ডাউনলোড করা হয়নি!</Text>
 
           {isDownloading ? (
             <>
