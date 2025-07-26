@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  BackHandler,
   Modal,
   StyleSheet,
   Text,
@@ -31,20 +30,6 @@ export default function DownloadScreen() {
   const [currentStep, setCurrentStep] = useState("");
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const router = useRouter();
-
-  const exitApp = () => {
-    BackHandler.exitApp();
-    return true;
-  };
-
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      exitApp
-    );
-
-    return () => backHandler.remove();
-  }, []);
 
   const checkInternet = async () => {
     const { isInternetReachable } = await Network.getNetworkStateAsync();
@@ -104,7 +89,7 @@ export default function DownloadScreen() {
         "দয়া করে ইন্টারনেট সংযোগ পরীক্ষা করুন এবং আবার চেষ্টা করুন",
         [
           { text: "আবার চেষ্টা করুন", onPress: handleDownload },
-          { text: "বাতিল করুন", style: "cancel", onPress: exitApp },
+          { text: "বাতিল করুন", style: "cancel" },
         ]
       );
       return;
@@ -128,7 +113,7 @@ export default function DownloadScreen() {
           const total = downloadProgress.totalBytesExpectedToWrite;
           const ratio = written / total;
           setProgress(ratio);
-          setDownloadedSizeMB((written / (1024 * 1024)).toFixed(2));
+          setDownloadedSizeMB((written / (1024 * 1024)).toFixed(2)); // নতুন লাইন
           setTotalSizeMB((total / (1024 * 1024)).toFixed(2));
         }
       );
@@ -191,7 +176,7 @@ export default function DownloadScreen() {
         visible={showDownloadModal}
         transparent
         animationType="fade"
-        onRequestClose={exitApp}
+        onRequestClose={() => setShowDownloadModal(false)}
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
@@ -211,7 +196,7 @@ export default function DownloadScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.secondaryButton]}
-                onPress={exitApp}
+                onPress={() => setShowDownloadModal(false)}
               >
                 <Text style={[styles.buttonText, { color: "#138d75" }]}>
                   পরে করব

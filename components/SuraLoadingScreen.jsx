@@ -1,18 +1,22 @@
-import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 export default function SuraLoadingScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
-        <ActivityIndicator size={148} color="#138d75" style={styles.loadingText}/>
         <Image
           source={require('../assets/images/icon.png')}
           style={styles.image}
           resizeMode="contain"
         />
+
+        <View style={styles.titleView}>
+          <Text style={styles.title}>কুরআন বাংলা</Text>
+          <Text style={styles.subTitle}>উচ্চারণ, বাংলা ও ইংরেজি অনুবাদ, অডিও সূরা</Text>
+        </View>
+        
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -27,15 +31,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    width: 150,
-    height: 150,
     position : 'relative',
   },
   image: {
     width: 150,
     height: 150,
   },
-  loadingText: {
-    position: 'absolute'
+  titleView: {
+    position: 'absolute',
+    bottom : -65,
+    flexDirection : 'column',
+    alignItems : 'center',
+    justifyContent : 'center'
+  },
+  title: {
+    fontFamily : 'banglaSemiBold',
+    fontSize : 30,
+    color: '#138d75',
+  },
+  subTitle: {
+    fontFamily : 'banglaRegular',
+    color: '#6a6d6cff',
   },
 });

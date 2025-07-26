@@ -9,15 +9,16 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LastHeader from "../../components/LastHeader";
 import LastRead from "../../components/LastRead";
 import SearchModal from "../../components/SearchModal";
 import SuraItem from "../../components/SuraItem";
 import SuraLoadingScreen from "../../components/SuraLoadingScreen";
 import useSettingsStore from "../../store/settingsStore";
-import LastHeader from "../../components/LastHeader";
 
 const SURAH_PATH = `${FileSystem.documentDirectory}APP_DATA/surah.json`;
 
@@ -35,7 +36,6 @@ export default function Quran() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Check if file exists
         const fileInfo = await FileSystem.getInfoAsync(SURAH_PATH);
         
         if (!fileInfo.exists) {
@@ -52,7 +52,6 @@ export default function Quran() {
           return;
         }
 
-        // Read the file
         const fileContent = await FileSystem.readAsStringAsync(SURAH_PATH);
         const parsedData = JSON.parse(fileContent);
         
@@ -117,24 +116,26 @@ export default function Quran() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.header}>
-        <Ionicons 
-          name="menu" 
-          size={24} 
-          onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())} 
-          color='#138d75'
-        />
+        <TouchableOpacity 
+          style={styles.iconButton}
+          onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        >
+          <Ionicons name="menu" size={24} color='#138d75' />
+        </TouchableOpacity>
+        
         <Text
           style={styles.headerTitle}
           onLongPress={() => setShowResetButton(!showResetButton)}
         >
           কুরআন বাংলা
         </Text>
-        <Ionicons 
-          name="search" 
-          size={24} 
-          onPress={openSearchModal} 
-          color='#138d75'
-        />
+        
+        <TouchableOpacity 
+          style={styles.iconButton}
+          onPress={openSearchModal}
+        >
+          <Ionicons name="search" size={24} color='#138d75' />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.container}>
@@ -165,94 +166,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 8,
+    paddingVertical: 8,
   },
   headerTitle: {
     fontSize: 22,
     fontFamily: "banglaSemiBold",
     color: "#138d75",
   },
-  loadingContainer: {
-    flex: 1,
+  iconButton: {
+    width: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    fontFamily: 'banglaRegular',
-    color: '#333',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f8f9fa',
-  },
-  errorText: {
-    fontSize: 18,
-    fontFamily: 'banglaSemiBold',
-    color: '#e74c3c',
-    marginBottom: 10,
-  },
-  errorDetail: {
-    fontSize: 14,
-    fontFamily: 'banglaRegular',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#138d75',
-    padding: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontFamily: 'banglaSemiBold',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'white',
-    paddingTop: 50,
-  },
-  searchHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    fontFamily: 'banglaRegular',
-  },
-  closeButton: {
-    marginLeft: 10,
-    color: '#138d75',
-    fontFamily: 'banglaSemiBold',
-  },
-  resultItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  surahName: {
-    fontFamily: 'banglaSemiBold',
-    fontSize: 18,
-    color: '#333',
-  },
-  surahMeaning: {
-    fontFamily: 'banglaRegular',
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
   },
 });

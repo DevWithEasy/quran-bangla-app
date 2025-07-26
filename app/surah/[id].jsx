@@ -2,8 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Audio } from "expo-av";
 import * as FileSystem from 'expo-file-system';
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text } from "react-native";
+import { memo, useCallback, useEffect, useState } from "react";
+import { Alert, FlatList, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AyahItem from "../../components/AyahItem";
 import AyahLoadingScreen from "../../components/AyahLoadingScreen";
@@ -16,6 +16,8 @@ import {
   getJsonData,
   getTiming,
 } from "../../utils/audioControllers";
+
+const MemoizedAyahItem = memo(AyahItem);
 
 export default function SurahScreen() {
   const { id, surahData } = useLocalSearchParams();
@@ -33,11 +35,9 @@ export default function SurahScreen() {
       try {
         setLoading(true);
         
-        // Load reciter from AsyncStorage
         const savedReciter = await AsyncStorage.getItem("reciter");
         setReciter(savedReciter ? parseInt(savedReciter) : 4);
         
-        // Load ayah data for this surah
         const ayahFilePath = `${FileSystem.documentDirectory}APP_DATA/ayah/surah_${id}.json`;
         const fileInfo = await FileSystem.getInfoAsync(ayahFilePath);
         
@@ -57,14 +57,13 @@ export default function SurahScreen() {
     loadData();
 
     return () => {
-      // Clean up audio when component unmounts
       if (sound) {
         sound.unloadAsync();
       }
     };
   }, [id]);
 
-  const stopAudio = async () => {
+  const stopAudio = useCallback(async () => {
     if (sound) {
       try {
         await sound.stopAsync();
@@ -76,26 +75,25 @@ export default function SurahScreen() {
         console.error("Error stopping audio:", err);
       }
     }
-  };
+  }, [sound]);
 
-  const playAyah = async (surah_id,ayah) => {
+  const playAyah = useCallback(async (surah_id, ayah) => {
     try {
-      // If same ayah is playing, stop it
       if (currentAyahId === ayah.id && isPlaying) {
         await stopAudio();
         return;
       }
 
-      const exist = await checkAudioFileExist(reciter,surah_id);
+      const exist = await checkAudioFileExist(reciter, surah_id);
       if (!exist) {
         setModalVisible(true);
         return;
       }
 
-      await stopAudio(); // Stop previous audio
+      await stopAudio();
 
       const audioPath = await getFilePath(reciter, surah_id);
-      const timings = await getTiming(reciter,surah_id);
+      const timings = await getTiming(reciter, surah_id);
 
       const currentAyah = timings.find((item) => item.ayah === ayah.id);
       const nextAyah = timings.find((item) => item.ayah === ayah.id + 1);
@@ -103,7 +101,6 @@ export default function SurahScreen() {
       const startTime = currentAyah.time;
       const endTime = nextAyah ? nextAyah.time : null;
 
-      // Load new sound
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioPath },
         { shouldPlay: false }
@@ -133,7 +130,7 @@ export default function SurahScreen() {
     } catch (error) {
       console.error("Error playing ayah:", error);
     }
-  };
+  }, [reciter, currentAyahId, isPlaying, stopAudio]);
 
   const onDownloadComplete = async () => {
     setModalVisible(false);
@@ -143,54 +140,64 @@ export default function SurahScreen() {
     setModalVisible(false);
   };
 
+  const renderAyahItem = useCallback(({ item }) => (
+    <MemoizedAyahItem
+      ayah={item}
+      surah={surahItem}
+      onPlay={playAyah}
+      isPlaying={currentAyahId === item.id && isPlaying}
+      stopAudio={stopAudio}
+    />
+  ), [surahItem, playAyah, currentAyahId, isPlaying, stopAudio]);
+
+  const ListHeaderComponent = useCallback(() => (
+    <>
+      <SuraInfo sura={surahItem} />
+      {surahItem.serial > 1 && (
+        <Text style={styles.bismillah}>
+          بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ
+        </Text>
+      )}
+    </>
+  ), [surahItem]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <QuranHeader name={surahItem.name_bn} />
+        <AyahLoadingScreen surah={surahItem} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <QuranHeader name={surahItem.name_bn} />
 
-      <ScrollView
+      <FlatList
+        data={ayahs}
+        renderItem={renderAyahItem}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={ListHeaderComponent}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
         contentContainerStyle={{
           paddingBottom: 0,
-          paddingTop: 0,
           backgroundColor: "#ffffff",
         }}
         style={{ flex: 1 }}
-      >
-        <SuraInfo sura={surahItem} />
-        
-        {loading ? (
-          <AyahLoadingScreen surah={surahItem} />
-        ) : (
-          <>
-            {surahItem.serial > 1 && (
-              <Text style={styles.bismillah}>
-                بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ
-              </Text>
-            )}
+      />
 
-            {/* Ayah List */}
-            {ayahs.map((ayah) => (
-              <AyahItem
-                key={ayah.id}
-                ayah={ayah}
-                surah={surahItem}
-                onPlay={playAyah}
-                isPlaying={currentAyahId === ayah.id && isPlaying}
-                stopAudio={stopAudio}
-              />
-            ))}
-
-            {/* No sura modal */}
-            <NoSuraModal
-              setModalVisible={setModalVisible}
-              modalVisible={modalVisible}
-              surahId={surahItem.serial}
-              reciter={reciter}
-              onDownloadCancelled={onDownloadCancelled}
-              onDownloadComplete={onDownloadComplete}
-            />
-          </>
-        )}
-      </ScrollView>
+      <NoSuraModal
+        setModalVisible={setModalVisible}
+        modalVisible={modalVisible}
+        surahId={surahItem.serial}
+        reciter={reciter}
+        onDownloadCancelled={onDownloadCancelled}
+        onDownloadComplete={onDownloadComplete}
+      />
     </SafeAreaView>
   );
 }

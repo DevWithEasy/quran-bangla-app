@@ -1,43 +1,49 @@
-import { View, Text, ImageBackground, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ImageBackground,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
+
+const { width, height } = Dimensions.get("window");
 
 export default function LastHeader() {
   return (
-    <ImageBackground 
-      source={require('../assets/images/header_backgrounnd.png')} 
-      style={styles.headerBackground}
-      resizeMode="cover"
-    >
+    <View style={styles.overlay}>
       <View style={styles.content}>
-        <Text style={styles.title}>আল কুরআন সেই কিতাব, যাতে কোন সন্দেহ নেই, মুত্তাকীদের জন্য হিদায়াত।</Text>
-        <Text style={styles.title2}>আর তোমাদের সাথে যা আছে তার সত্যায়নকারীস্বরূপ আমি যা নাযিল করেছি তার প্রতি তোমরা ঈমান আন এবং তোমরা তা প্রথম অস্বীকারকারী হয়ো না।</Text>
+        <Text style={styles.title}>
+          আল কুরআন সেই কিতাব, যাতে কোন সন্দেহ নেই, মুত্তাকীদের জন্য হিদায়াত।
+        </Text>
+        <Text style={styles.title2}>
+          আর তোমাদের সাথে যা আছে তার সত্যায়নকারীস্বরূপ আমি যা নাযিল করেছি তার
+          প্রতি তোমরা ঈমান আন এবং তোমরা তা প্রথম অস্বীকারকারী হয়ো না।
+        </Text>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerBackground: {
-    height: 140,
-    width: '100%',
-    padding: 16,
-    backgroundColor: '#d4efdf',
-    borderRadius: 8,
-    marginBottom: 16,
-    elevation: 1.5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
   content: {
-    
+    backgroundColor: "rgba(255,255,255,0.8)",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom : 8
   },
   title: {
-    color : '#138d75',
-    fontFamily: 'banglaSemiBold',
+    color: "#138d75",
+    fontFamily: "banglaSemiBold",
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 8,
+    textAlign: "center",
   },
-    title2: {
-    color : '#138d75',
-    fontFamily: 'banglaRegular',
-  }
+  title2: {
+    color: "#666666",
+    fontFamily: "banglaRegular",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
 });

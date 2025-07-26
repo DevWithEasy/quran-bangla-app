@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "quran-majeed-bangla",
-    "slug": "quran-majeed-bangla",
+    "name": "কুরআন বাংলা",
+    "slug": "quran-bangla",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "quranmajeedbangla",
+    "scheme": "quranbangla",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.codeorbitstudio.quranbangla"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b1494631-7e9d-42f8-aa7c-fde018aa0aee"
+      }
     }
   }
 }
