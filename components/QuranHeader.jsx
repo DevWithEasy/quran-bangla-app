@@ -11,17 +11,20 @@ export default function QuranHeader({name}) {
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: 8,
+          paddingHorizontal: 8,
+          paddingVertical: 16,
+          backgroundColor : '#138d75',
+          elevation : 1
         }}
       >
         <Ionicons
           name="chevron-back-outline"
           size={24}
           onPress={() => router.back()}
-          color= "#138d75"
+          color= "#ffffff"
         />
         <Text
-          style={{ fontSize: 18, fontFamily: "banglaRegular", color: "#138d75" }}
+          style={{ fontSize: 18, fontFamily: "banglaRegular", color: "#ffffff" }}
         >
           {name}
         </Text>
@@ -29,7 +32,7 @@ export default function QuranHeader({name}) {
           name="settings-outline"
           size={22}
           onPress={() => router.push("/settings")}
-          color= "#138d75"
+          color= "#ffffff"
         />
       </View>
   )

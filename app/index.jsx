@@ -1,10 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { toBengaliNumber } from "bengali-number";
-import { Buffer } from "buffer";
-import * as FileSystem from "expo-file-system";
-import * as Network from "expo-network";
 import { useRouter } from "expo-router";
-import { unzipSync } from "fflate";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,157 +9,192 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-const ZIP_URL =
-  "https://cdn.jsdelivr.net/gh/DevWithEasy/app-file-store-repo/APP_DATA.zip";
-const ZIP_NAME = "APP_DATA.zip";
-const DATA_PATH = `${FileSystem.documentDirectory}APP_DATA`;
-const ZIP_PATH = `${FileSystem.documentDirectory}${ZIP_NAME}`;
+import Database from "../lib/database";
+import * as FileSystem from "expo-file-system";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { toBengaliNumber } from "bengali-number";
 
 export default function DownloadScreen() {
-  const [downloading, setDownloading] = useState(false);
+  const [initializing, setInitializing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [totalSizeMB, setTotalSizeMB] = useState(0);
-  const [downloadedSizeMB, setDownloadedSizeMB] = useState(0);
   const [currentStep, setCurrentStep] = useState("");
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [estimatedSize, setEstimatedSize] = useState("২.৫");
   const router = useRouter();
 
-  const checkInternet = async () => {
-    const { isInternetReachable } = await Network.getNetworkStateAsync();
-    return isInternetReachable;
+  const checkExistingData = async () => {
+    try {
+      // AsyncStorage এ চেক করুন ডাটাবেজ ইনিশিয়ালাইজড হয়েছে কিনা
+      const dbInitialized = await AsyncStorage.getItem('database_initialized');
+      return dbInitialized === 'true';
+    } catch (error) {
+      console.error('Error checking existing data:', error);
+      return false;
+    }
   };
 
-  const checkExistingData = async () => {
-    const dirInfo = await FileSystem.getInfoAsync(DATA_PATH);
-    if (dirInfo.exists) {
-      router.replace("/quran");
-      return true;
+  const checkDatabaseFile = async () => {
+    try {
+      const dbPath = `${FileSystem.documentDirectory}SQLite/quran.db`;
+      const fileInfo = await FileSystem.getInfoAsync(dbPath);
+      return fileInfo.exists;
+    } catch (error) {
+      console.error('Error checking database file:', error);
+      return false;
+    }
+  };
+
+  const initializeDatabase = async () => {
+    const hasFile = await checkDatabaseFile();
+    if (hasFile) {
+      try {
+        setCurrentStep("ডাটাবেজ লোড হচ্ছে...");
+        await Database.initialize();
+        return true;
+      } catch (error) {
+        console.error('Error initializing existing database:', error);
+        return false;
+      }
     }
     return false;
   };
 
-  const ensureDir = async (path) => {
-    const dirInfo = await FileSystem.getInfoAsync(path);
-    if (!dirInfo.exists) {
-      await FileSystem.makeDirectoryAsync(path, { intermediates: true });
-    }
-  };
-
-  const unzipAppData = async (zipPath) => {
-    const zipBase64 = await FileSystem.readAsStringAsync(zipPath, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    const zipBuffer = Buffer.from(zipBase64, "base64");
-    const unzipped = unzipSync(zipBuffer);
-
-    const firstEntry = Object.keys(unzipped)[0];
-    let baseDir = DATA_PATH;
-
-    if (firstEntry && firstEntry.startsWith("APP_DATA/")) {
-      baseDir = FileSystem.documentDirectory;
-    }
-
-    for (const [filePath, fileData] of Object.entries(unzipped)) {
-      const fullPath = `${baseDir}/${filePath}`;
-      const isDirectory = filePath.endsWith("/");
-
-      if (isDirectory) {
-        await ensureDir(fullPath);
-      } else {
-        const dirPath = fullPath.substring(0, fullPath.lastIndexOf("/"));
-        await ensureDir(dirPath);
-        const binary = Buffer.from(fileData).toString("utf8");
-        await FileSystem.writeAsStringAsync(fullPath, binary);
-      }
-    }
-  };
-
-  const handleDownload = async () => {
-    const isConnected = await checkInternet();
-    if (!isConnected) {
-      Alert.alert(
-        "ডাউনলোড ব্যর্থ",
-        "দয়া করে ইন্টারনেট সংযোগ পরীক্ষা করুন এবং আবার চেষ্টা করুন",
-        [
-          { text: "আবার চেষ্টা করুন", onPress: handleDownload },
-          { text: "বাতিল করুন", style: "cancel" },
-        ]
-      );
-      return;
-    }
-
-    setDownloading(true);
-    setShowDownloadModal(false);
+  const handleInitialize = async () => {
+    setInitializing(true);
+    setShowModal(false);
     setProgress(0);
-    setDownloadedSizeMB(0);
 
     try {
-      setCurrentStep("ফাইল ডাউনলোড হচ্ছে...");
-      await ensureDir(DATA_PATH);
+      // ধাপ ১: ডাটাবেজ ফাইল চেক
+      setCurrentStep("ডাটাবেজ ফাইল চেক করা হচ্ছে...");
+      setProgress(0.1);
+      
+      const hasExistingDb = await initializeDatabase();
+      if (hasExistingDb) {
+        console.log('✅ Using existing database');
+        await AsyncStorage.setItem("reciter", "4");
+        router.replace("/(tabs)");
+        return;
+      }
 
-      const downloadResumable = FileSystem.createDownloadResumable(
-        ZIP_URL,
-        ZIP_PATH,
-        {},
-        (downloadProgress) => {
-          const written = downloadProgress.totalBytesWritten;
-          const total = downloadProgress.totalBytesExpectedToWrite;
-          const ratio = written / total;
-          setProgress(ratio);
-          setDownloadedSizeMB((written / (1024 * 1024)).toFixed(2)); // নতুন লাইন
-          setTotalSizeMB((total / (1024 * 1024)).toFixed(2));
-        }
-      );
+      // ধাপ ২: নতুন ডাটাবেজ ইনিশিয়ালাইজেশন
+      setCurrentStep("ডাটাবেজ প্রস্তুত হচ্ছে...");
+      setProgress(0.3);
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      await downloadResumable.downloadAsync();
-
-      setCurrentStep("ফাইলগুলো প্রস্তুত হচ্ছে...");
-      await unzipAppData(ZIP_PATH);
+      setCurrentStep("ডাটাবেজ ইনিশিয়ালাইজ করা হচ্ছে...");
+      setProgress(0.6);
+      
+      const db = await Database.initialize();
+      
+      setCurrentStep("ডাটাবেজ যাচাই করা হচ্ছে...");
+      setProgress(0.8);
+      
+      // ডাটাবেজ টেস্ট ক্যুয়েরি
+      const surahCount = await Database.query("SELECT COUNT(*) as count FROM surah");
+      console.log('📊 Total surahs:', surahCount[0]?.count || 0);
+      
+      if (!surahCount[0]?.count || surahCount[0].count === 0) {
+        throw new Error('ডাটাবেজে কোনো সূরা পাওয়া যায়নি');
+      }
 
       setCurrentStep("সেটআপ সম্পন্ন হচ্ছে...");
+      setProgress(1);
+      
       await AsyncStorage.setItem("reciter", "4");
-
-      await FileSystem.deleteAsync(ZIP_PATH, { idempotent: true });
-
-      router.replace("/quran");
+      
+      // সাফল্যের জন্য একটু অপেক্ষা করুন
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      router.replace("/(tabs)");
+      
     } catch (error) {
-      console.error("Download or unzip failed:", error);
-      Alert.alert("ত্রুটি", "ডাউনলোড বা সেটআপে সমস্যা হয়েছে");
-
-      try {
-        await FileSystem.deleteAsync(DATA_PATH, { idempotent: true });
-        await FileSystem.deleteAsync(ZIP_PATH, { idempotent: true });
-      } catch (cleanupError) {
-        console.error("Cleanup failed:", cleanupError);
-      }
+      console.error('❌ Database initialization failed:', error);
+      
+      Alert.alert(
+        "ত্রুটি",
+        `ডাটাবেজ ইনিশিয়ালাইজেশনে সমস্যা হয়েছে: ${error.message}`,
+        [
+          { 
+            text: "আবার চেষ্টা করুন", 
+            onPress: () => {
+              Database.resetDb().then(() => {
+                handleInitialize();
+              });
+            }
+          },
+          { 
+            text: "বাতিল করুন", 
+            style: "cancel",
+            onPress: () => {
+              setInitializing(false);
+              setShowModal(true);
+            }
+          }
+        ]
+      );
     } finally {
-      setDownloading(false);
+      setInitializing(false);
     }
   };
 
   useEffect(() => {
-    const initializeApp = async () => {
-      const hasData = await checkExistingData();
-      if (!hasData) {
-        setShowDownloadModal(true);
+    const initApp = async () => {
+      try {
+        // প্রথমে চেক করুন ডাটাবেজ ইতিমধ্যেই প্রস্তুত কিনা
+        const hasData = await checkExistingData();
+        const hasFile = await checkDatabaseFile();
+        
+        console.log('📊 App initialization check:', { hasData, hasFile });
+        
+        if (hasData && hasFile) {
+          // ডাটাবেজ ইতিমধ্যে আছে, সরাসরি হোমে নিয়ে যান
+          console.log('✅ Database already initialized, redirecting...');
+          router.replace("/(tabs)");
+        } else if (hasFile) {
+          // ফাইল আছে কিন্তু ইনিশিয়ালাইজড নয়
+          console.log('📁 Database file exists but not initialized');
+          setShowModal(true);
+        } else {
+          // কোনো ফাইল নেই, ইনিশিয়ালাইজেশন প্রয়োজন
+          console.log('📭 No database file found, showing modal');
+          setShowModal(true);
+        }
+      } catch (error) {
+        console.error('❌ Error during app initialization:', error);
+        setShowModal(true);
       }
     };
 
-    initializeApp();
+    initApp();
   }, []);
 
-  if (downloading) {
+  if (initializing) {
     return (
-      <View style={styles.downloadContainer}>
-        <Text style={styles.title}>{currentStep}</Text>
-        <Text style={styles.percentage}>
-          {toBengaliNumber(Math.round(progress * 100))}%
-        </Text>
-        <Text style={styles.size}>
-          ডাউনলোড: {toBengaliNumber(downloadedSizeMB)}/{toBengaliNumber(totalSizeMB)} MB
-        </Text>
-        <ActivityIndicator size="large" color="#138d75" />
+      <View style={styles.container}>
+        <View style={styles.downloadContainer}>
+          <Text style={styles.title}>{currentStep}</Text>
+          <Text style={styles.percentage}>
+            {toBengaliNumber(Math.round(progress * 100))}%
+          </Text>
+          
+          {/* প্রোগ্রেস বার */}
+          <View style={styles.progressBarContainer}>
+            <View 
+              style={[
+                styles.progressBar, 
+                { width: `${progress * 100}%` }
+              ]} 
+            />
+          </View>
+          
+          <ActivityIndicator size="large" color="#138d75" style={styles.spinner} />
+          
+          <Text style={styles.size}>
+            আনুমানিক ফাইল সাইজ: {estimatedSize} MB
+          </Text>
+        </View>
       </View>
     );
   }
@@ -173,35 +202,48 @@ export default function DownloadScreen() {
   return (
     <View style={styles.container}>
       <Modal
-        visible={showDownloadModal}
+        visible={showModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowDownloadModal(false)}
+        onRequestClose={() => {
+          // মডাল বন্ধ করতে দেবেন না, ইউজারকে ইনিশিয়ালাইজ করতেই হবে
+          Alert.alert(
+            "প্রয়োজনীয়",
+            "অ্যাপটি ব্যবহার করতে ডাটাবেজ ইনিশিয়ালাইজ করা আবশ্যক।",
+            [{ text: "ঠিক আছে", style: "default" }]
+          );
+        }}
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>ডাটাবেজ ফাইল ডাউনলোড</Text>
-            <Text style={styles.modalText}>
-              প্রথমবার ব্যবহারের জন্য কুরআনের ডাটাবেজ ডাউনলোড করতে হবে
-            </Text>
-            <Text style={styles.modalText}>
-              প্রায় ({toBengaliNumber(2.39)} MB) ফাইলটি ডাউনলোড হবে
-            </Text>
+            <Text style={styles.modalTitle}>ডাটাবেজ সেটআপ</Text>
+            
+            <View style={styles.infoBox}>
+              <Text style={styles.infoText}>
+                📖 কুরআন মাজীদের ডাটাবেজ সেটআপ প্রয়োজন
+              </Text>
+              <Text style={styles.infoText}>
+                💾 আনুমানিক সাইজ: {estimatedSize} MB
+              </Text>
+              <Text style={styles.infoText}>
+                ⚡ ইন্টারনেট সংযোগ প্রয়োজন
+              </Text>
+              <Text style={styles.infoText}>
+                ✅ একবার সেটআপ করার পর প্রয়োজন হবে না
+              </Text>
+            </View>
+            
             <View style={styles.buttonGroup}>
               <TouchableOpacity
                 style={[styles.button, styles.primaryButton]}
-                onPress={handleDownload}
+                onPress={handleInitialize}
               >
-                <Text style={styles.buttonText}>ডাউনলোড করুন</Text>
+                <Text style={styles.buttonText}>সেটআপ শুরু করুন</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.secondaryButton]}
-                onPress={() => setShowDownloadModal(false)}
-              >
-                <Text style={[styles.buttonText, { color: "#138d75" }]}>
-                  পরে করব
-                </Text>
-              </TouchableOpacity>
+              
+              <Text style={styles.note}>
+                প্রথমবার সেটআপ করতে কয়েক মিনিট সময় লাগতে পারে
+              </Text>
             </View>
           </View>
         </View>
@@ -213,7 +255,7 @@ export default function DownloadScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -222,78 +264,114 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    backgroundColor: "#ffffff",
+    width: "100%",
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: "banglaSemiBold",
-    marginBottom: 16,
+    marginBottom: 20,
     color: "#333333",
     textAlign: "center",
   },
   percentage: {
-    fontSize: 26,
+    fontSize: 32,
     fontFamily: "banglaSemiBold",
     color: "#138d75",
-    marginBottom: 8,
+    marginBottom: 20,
+  },
+  progressBarContainer: {
+    width: "80%",
+    height: 8,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 4,
+    marginBottom: 30,
+    overflow: "hidden",
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: "#138d75",
+    borderRadius: 4,
+  },
+  spinner: {
+    marginBottom: 20,
   },
   size: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: "banglaRegular",
     color: "#666666",
-    marginBottom: 16,
+    textAlign: "center",
   },
   modalBackground: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
   },
   modalContent: {
     backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 20,
-    width: "85%",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 400,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: "banglaSemiBold",
-    marginBottom: 12,
-    color: "#333333",
+    marginBottom: 20,
+    color: "#138d75",
     textAlign: "center",
   },
-  modalText: {
+  infoBox: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    width: "100%",
+  },
+  infoText: {
     fontSize: 14,
     fontFamily: "banglaRegular",
-    color: "#555555",
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 22,
+    color: "#495057",
+    marginBottom: 8,
+    lineHeight: 20,
   },
   buttonGroup: {
     width: "100%",
-    marginTop: 8,
+    alignItems: "center",
   },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 6,
-    marginBottom: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    width: "100%",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 16,
   },
   primaryButton: {
     backgroundColor: "#138d75",
-  },
-  secondaryButton: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#138d75",
   },
   buttonText: {
     fontSize: 16,
     fontFamily: "banglaSemiBold",
     color: "#ffffff",
+  },
+  note: {
+    fontSize: 12,
+    fontFamily: "banglaRegular",
+    color: "#6c757d",
+    textAlign: "center",
+    fontStyle: "italic",
+    marginTop: 8,
   },
 });

@@ -1,8 +1,11 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
+import DatabaseInitializer from "../components/DatabaseInitializer";
+import { DatabaseProvider } from "../contexts/DatabaseContext";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,6 +20,8 @@ export default function RootLayout() {
     qalam: require("../assets/fonts/qalam.ttf"),
   });
 
+  const [isAppReady, setIsAppReady] = useState(false);
+
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
@@ -28,51 +33,76 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <Stack>
-        <Stack.Screen
-          name="index"
-          options={{
-            headerTitle: "Home",
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="quran"
-          options={{
-            title: "Quran",
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="surah/[id]"
-          options={{
-            headerTitle: "Surah Details",
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="settings"
-          options={{
-            headerTitle: "সেটিংস",
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <DatabaseProvider>
+      <DatabaseInitializer onInitialized={() => setIsAppReady(true)}>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: "#138d75",
+            },
+            headerTintColor: "#fff",
             headerTitleStyle: {
-              fontFamily: "banglaRegular",
-              color: "#138d75",
+              fontFamily: "banglaSemiBold",
             },
           }}
-        />
-        <Stack.Screen
-          name="download"
-          options={{
-            headerTitle: "ডাটাবেজ ফাইল ডাউনলোড",
-            headerTitleStyle: {
-              fontFamily: "banglaRegular",
-              color: "#138d75",
-            },
-          }}
-        />
-      </Stack>
-      <Toast />
-    </>
+        >
+          {/* Initial screen - shows only during database initialization */}
+          <Stack.Screen
+            name="index"
+            options={{
+              headerShown: false,
+            }}
+          />
+
+          {/* Tabs group - main app after initialization */}
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: false,
+            }}
+          />
+
+          {/* Surah details page */}
+          <Stack.Screen
+            name="surah/[id]"
+            options={{
+              headerShown : false ,
+              headerTitle: "সূরা বিস্তারিত",
+              headerTitleStyle: {
+                fontFamily: "banglaRegular",
+              },
+            }}
+          />
+
+          {/* Settings page */}
+          <Stack.Screen
+            name="settings"
+            options={{
+              headerTitle: "সেটিংস",
+            }}
+          />
+
+          {/* About page */}
+          <Stack.Screen
+            name="about"
+            options={{
+              headerTitle: "এপ্লিকেশন সম্পর্কে",
+            }}
+          />
+
+          {/* Privacy page */}
+          <Stack.Screen
+            name="privacy"
+            options={{
+              headerTitle: "গোপনীয়তা নীতি",
+            }}
+          />
+        </Stack>
+        <Toast />
+      </DatabaseInitializer>
+    </DatabaseProvider>
+    </GestureHandlerRootView>
+    
   );
 }

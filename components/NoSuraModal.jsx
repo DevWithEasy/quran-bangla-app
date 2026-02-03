@@ -1,6 +1,6 @@
 import * as FileSystem from "expo-file-system";
-import { useEffect, useState, useRef } from "react";
 import * as Network from "expo-network";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -10,12 +10,12 @@ import {
   Text,
   View,
 } from "react-native";
-import {
-  getDownloadKLink,
-  getFilePath,
-  getFolderPath,
-} from "../utils/audioControllers";
 import Toast from "react-native-toast-message";
+import DbService from "../lib/dbService";
+import {
+  getFilePath,
+  getFolderPath
+} from "../utils/audioControllers";
 
 export default function NoSuraModal({
   modalVisible,
@@ -55,14 +55,15 @@ export default function NoSuraModal({
               style: "cancel",
               onPress: onDownloadCancelled,
             },
-          ]
+          ],
         );
         return;
       }
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      const downloadUrl = await getDownloadKLink(reciter, surahId);
+      const downloadUrl = await DbService.getSuraUrl(surahId, reciter);
+
       const dirUri = await getFolderPath(reciter);
       const downloadPath = await getFilePath(reciter, surahId);
 
@@ -73,7 +74,7 @@ export default function NoSuraModal({
       }
 
       downloadResumableRef.current = FileSystem.createDownloadResumable(
-        downloadUrl,
+        downloadUrl.audio_url,
         downloadPath,
         {},
         (progress) => {
@@ -81,7 +82,7 @@ export default function NoSuraModal({
             (progress.totalBytesWritten / progress.totalBytesExpectedToWrite) *
             100;
           setDownloadProgress(progressPercent);
-        }
+        },
       );
 
       await downloadResumableRef.current.downloadAsync();
