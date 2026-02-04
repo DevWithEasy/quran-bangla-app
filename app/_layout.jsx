@@ -1,15 +1,18 @@
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import DatabaseInitializer from "../components/DatabaseInitializer";
 import { DatabaseProvider } from "../contexts/DatabaseContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const router = useRouter()
   const [fontsLoaded, fontError] = useFonts({
     banglaRegular: require("../assets/fonts/banglaRegular.ttf"),
     banglaSemiBold: require("../assets/fonts/banglaSemiBold.ttf"),
@@ -35,74 +38,78 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <DatabaseProvider>
-      <DatabaseInitializer onInitialized={() => setIsAppReady(true)}>
-        <Stack
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: "#138d75",
-            },
-            headerTintColor: "#fff",
-            headerTitleStyle: {
-              fontFamily: "banglaSemiBold",
-            },
-          }}
-        >
-          {/* Initial screen - shows only during database initialization */}
-          <Stack.Screen
-            name="index"
-            options={{
-              headerShown: false,
-            }}
-          />
-
-          {/* Tabs group - main app after initialization */}
-          <Stack.Screen
-            name="(tabs)"
-            options={{
-              headerShown: false,
-            }}
-          />
-
-          {/* Surah details page */}
-          <Stack.Screen
-            name="surah/[id]"
-            options={{
-              headerShown : false ,
-              headerTitle: "সূরা বিস্তারিত",
-              headerTitleStyle: {
-                fontFamily: "banglaRegular",
+        <DatabaseInitializer onInitialized={() => setIsAppReady(true)}>
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: "#138d75",
               },
+              headerTintColor: "#fff",
+              headerTitleStyle: {
+                fontFamily: "banglaSemiBold",
+              },
+              headerBackTitleVisible: false,
             }}
-          />
+          >
+            {/* Initial screen - shows only during database initialization */}
+            <Stack.Screen
+              name="index"
+              options={{
+                headerShown: false,
+              }}
+            />
 
-          {/* Settings page */}
-          <Stack.Screen
-            name="settings"
-            options={{
-              headerTitle: "সেটিংস",
-            }}
-          />
+            {/* Tabs group - main app after initialization */}
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: false,
+              }}
+            />
 
-          {/* About page */}
-          <Stack.Screen
-            name="about"
-            options={{
-              headerTitle: "এপ্লিকেশন সম্পর্কে",
-            }}
-          />
+            {/* Surah details page - DYNAMIC TITLE */}
+            <Stack.Screen
+              name="surah/[id]"
+              options={({ route }) => ({
+                headerTitle: "",
+                headerTitleStyle: {
+                  fontFamily: "banglaRegular",
+                },
+                headerRight : ()=> (
+                  <TouchableOpacity onPress={()=>router.push('/settings')}>
+                    <Ionicons name="settings" color='#ffffff' size={20}/>
+                  </TouchableOpacity>
+                )
+              })}
+            />
 
-          {/* Privacy page */}
-          <Stack.Screen
-            name="privacy"
-            options={{
-              headerTitle: "গোপনীয়তা নীতি",
-            }}
-          />
-        </Stack>
-        <Toast />
-      </DatabaseInitializer>
-    </DatabaseProvider>
+            {/* Settings page */}
+            <Stack.Screen
+              name="settings"
+              options={{
+                headerTitle: "সেটিংস",
+              }}
+            />
+
+            {/* About page */}
+            <Stack.Screen
+              name="about"
+              options={{
+                headerTitle: "এপ্লিকেশন সম্পর্কে",
+              }}
+            />
+
+            {/* Privacy page */}
+            <Stack.Screen
+              name="privacy"
+              options={{
+                headerTitle: "গোপনীয়তা নীতি",
+              }}
+            />
+          </Stack>
+          <Toast />
+        </DatabaseInitializer>
+      </DatabaseProvider>
     </GestureHandlerRootView>
-    
   );
 }

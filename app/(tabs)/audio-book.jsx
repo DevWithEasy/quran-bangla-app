@@ -8,9 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Platform,
   SafeAreaView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -353,22 +351,9 @@ export default function AudioBook() {
     setDownloadingSurah(null);
   };
 
-  // Header component
-  const Header = () => (
-    <View style={styles.headerContainer}>
-      <View style={styles.headerCenter}>
-        <Text style={styles.headerTitle}>অডিও কুরআন</Text>
-        <Text style={styles.headerSubtitle}>
-          নির্বাচিত ক্বারী: {getCurrentReciterName()}
-        </Text>
-      </View>
-    </View>
-  );
-
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <Header />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#138d75" />
           <Text style={styles.loadingText}>সূরা এবং ক্বারী লোড হচ্ছে...</Text>
@@ -380,7 +365,6 @@ export default function AudioBook() {
   if (!reciters.length || !surahs.length) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <Header />
         <View style={styles.loadingContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#e74c3c" />
           <Text style={styles.errorText}>ডাটা লোড করতে ব্যর্থ হয়েছে</Text>
@@ -414,8 +398,6 @@ export default function AudioBook() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Header />
-
       {/* Reciter Selection */}
       <View style={styles.reciterContainer}>
         <View style={styles.sectionHeader}>
@@ -438,12 +420,6 @@ export default function AudioBook() {
                   soundRef.current.unloadAsync();
                   soundRef.current = null;
                 }
-                Toast.show({
-                  type: "success",
-                  text1: "ক্বারী নির্বাচিত",
-                  text2: `নির্বাচিত: ${reciter.name_bn || reciter.name}`,
-                  visibilityTime: 2000,
-                });
               }}
             >
               <Text
@@ -546,7 +522,6 @@ export default function AudioBook() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   headerContainer: {
     flexDirection: "row",

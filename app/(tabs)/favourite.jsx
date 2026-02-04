@@ -1,11 +1,19 @@
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Modal } from "react-native";
-import DbService from "../../lib/dbService";
-import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { toBengaliNumber } from "bengali-number";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import DbService from "../../lib/dbService";
 
 export default function Favourite() {
   const router = useRouter();
@@ -39,12 +47,11 @@ export default function Favourite() {
     loadData();
   };
 
-  const handleRemoveFavorite = async (favoriteId) => {
+  const handleRemoveFavorite = async (surah_id,ayah_number) => {
     try {
-      await DbService.removeFavorite(favoriteId);
-      Alert.alert("সফল", "ফেভারিট থেকে সরানো হয়েছে");
-      loadData(); // Refresh the list
-      setModalVisible(false); // Close modal if open
+      await DbService.removeFavorite(surah_id,ayah_number);
+      loadData();
+      setModalVisible(false);
     } catch (error) {
       console.error("Error removing favorite:", error);
       Alert.alert("ত্রুটি", "ফেভারিট সরাতে সমস্যা হয়েছে");
@@ -78,7 +85,7 @@ export default function Favourite() {
   };
 
   const renderFavoriteItem = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.favoriteItem}
       onPress={() => openItemModal(item)}
       activeOpacity={0.7}
@@ -107,10 +114,14 @@ export default function Favourite() {
 
       {/* সাইড আর্ক ইনফো */}
       <View style={styles.sideInfo}>
-        <View style={[
-          styles.revelationBadge,
-          item.revelation_type === "Meccan" ? styles.meccanBadge : styles.madaniBadge
-        ]}>
+        <View
+          style={[
+            styles.revelationBadge,
+            item.revelation_type === "Meccan"
+              ? styles.meccanBadge
+              : styles.madaniBadge,
+          ]}
+        >
           <Text style={styles.revelationText}>
             {item.revelation_type === "Meccan" ? "ম" : "দ"}
           </Text>
@@ -122,12 +133,12 @@ export default function Favourite() {
 
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="bookmark-outline" size={80} color="#d1d8e0" />
+      <Ionicons name="bookmark-outline" size={60} color="#d1d8e0" />
       <Text style={styles.emptyTitle}>কোনো ফেভারিট নেই</Text>
       <Text style={styles.emptySubtitle}>
         আপনি এখনো কোনো আয়াত ফেভারিট করেননি
       </Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.browseButton}
         onPress={() => router.push("/quran")}
       >
@@ -163,7 +174,7 @@ export default function Favourite() {
                   আয়াত: {toBengaliNumber(selectedItem.ayah_number)}
                 </Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalCloseButton}
                 onPress={() => setModalVisible(false)}
               >
@@ -172,7 +183,7 @@ export default function Favourite() {
             </View>
 
             {/* বিস্তারিত কন্টেন্ট */}
-            <ScrollView 
+            <ScrollView
               style={styles.modalContent}
               showsVerticalScrollIndicator={false}
             >
@@ -194,7 +205,9 @@ export default function Favourite() {
               {/* ইংরেজি অনুবাদ */}
               {selectedItem.text_en && (
                 <View style={styles.translationContainer}>
-                  <Text style={styles.translationLabel}>English Translation:</Text>
+                  <Text style={styles.translationLabel}>
+                    English Translation:
+                  </Text>
                   <Text style={styles.englishFullText}>
                     {selectedItem.text_en}
                   </Text>
@@ -218,7 +231,10 @@ export default function Favourite() {
                 <View style={styles.detailRow}>
                   <Ionicons name="location" size={18} color="#7f8c8d" />
                   <Text style={styles.detailText}>
-                    ধরন: {selectedItem.revelation_type === "Meccan" ? "মাক্কী" : "মাদানী"}
+                    ধরন:{" "}
+                    {selectedItem.revelation_type === "Meccan"
+                      ? "মাক্কী"
+                      : "মাদানী"}
                   </Text>
                 </View>
               </View>
@@ -226,7 +242,7 @@ export default function Favourite() {
 
             {/* অ্যাকশন বাটনস */}
             <View style={styles.modalActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.actionButton, styles.goToButton]}
                 onPress={() => navigateToSurah(selectedItem)}
               >
@@ -234,9 +250,9 @@ export default function Favourite() {
                 <Text style={styles.actionButtonText}>সূরায় যান</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.actionButton, styles.removeButton]}
-                onPress={() => handleRemoveFavorite(selectedItem.favorite_id)}
+                onPress={() => handleRemoveFavorite(selectedItem.surah_id,selectedItem.ayah_number)}
               >
                 <Ionicons name="trash-outline" size={20} color="white" />
                 <Text style={styles.actionButtonText}>ফেভারিট থেকে সরান</Text>
@@ -250,7 +266,7 @@ export default function Favourite() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>ফেভারিট</Text>
         </View>
@@ -258,36 +274,12 @@ export default function Favourite() {
           <ActivityIndicator size="large" color="#138d75" />
           <Text style={styles.loadingText}>ফেভারিট লোড হচ্ছে...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>ফেভারিট</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity 
-            style={styles.refreshButton}
-            onPress={handleRefresh}
-            disabled={refreshing}
-          >
-            <Ionicons 
-              name="refresh" 
-              size={22} 
-              color={refreshing ? "#bdc3c7" : "#138d75"} 
-            />
-          </TouchableOpacity>
-          {favorites.length > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>
-                {toBengaliNumber(favorites.length)}
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-
+    <View style={styles.safeArea}>
       <FlatList
         data={favorites}
         renderItem={renderFavoriteItem}
@@ -301,7 +293,7 @@ export default function Favourite() {
       />
 
       <DetailModal />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -310,70 +302,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#138d75',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8f4f1',
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontFamily: 'banglaSemiBold',
-    color: '#ffffff',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  refreshButton: {
-    padding: 4,
-  },
-  countBadge: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  countText: {
-    color: '#138d75',
-    fontFamily: 'banglaSemiBold',
-    fontSize: 14,
-  },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    fontFamily: 'banglaRegular',
-    color: '#7f8c8d',
+    fontFamily: "banglaRegular",
+    color: "#7f8c8d",
   },
   listContainer: {
     padding: 16,
     paddingBottom: 20,
   },
   favoriteItem: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 12,
     padding: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     elevation: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -385,141 +336,139 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   surahInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 6,
   },
   surahName: {
     fontSize: 16,
-    fontFamily: 'banglaSemiBold',
-    color: '#2c3e50',
+    fontFamily: "banglaSemiBold",
+    color: "#2c3e50",
     marginRight: 8,
     flex: 1,
   },
   ayahNumber: {
     fontSize: 13,
-    fontFamily: 'banglaRegular',
-    color: '#138d75',
-    backgroundColor: '#e8f6f3',
+    fontFamily: "banglaRegular",
+    color: "#138d75",
+    backgroundColor: "#e8f6f3",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
   },
   arabicPreview: {
     fontSize: 15,
-    fontFamily: 'me-quran',
-    color: '#34495e',
+    fontFamily: "me-quran",
+    color: "#34495e",
     marginBottom: 4,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    textAlign: "right",
+    writingDirection: "rtl",
   },
   translationPreview: {
     fontSize: 13,
-    fontFamily: 'banglaRegular',
-    color: '#7f8c8d',
+    fontFamily: "banglaRegular",
+    color: "#7f8c8d",
     lineHeight: 18,
   },
   sideInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   revelationBadge: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   meccanBadge: {
-    backgroundColor: '#ffeaa7',
+    backgroundColor: "#ffeaa7",
   },
   madaniBadge: {
-    backgroundColor: '#a29bfe',
+    backgroundColor: "#a29bfe",
   },
   revelationText: {
     fontSize: 12,
-    fontFamily: 'banglaSemiBold',
-    color: '#2c3e50',
+    fontFamily: "banglaSemiBold",
+    color: "#2c3e50",
   },
   separator: {
     height: 10,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 60,
     paddingHorizontal: 20,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontFamily: 'banglaSemiBold',
-    color: '#7f8c8d',
+    fontSize: 16,
+    fontFamily: "banglaSemiBold",
+    color: "#7f8c8d",
     marginTop: 20,
     marginBottom: 8,
   },
   emptySubtitle: {
-    fontSize: 16,
-    fontFamily: 'banglaRegular',
-    color: '#bdc3c7',
-    textAlign: 'center',
+    fontFamily: "banglaRegular",
+    color: "#bdc3c7",
+    textAlign: "center",
     marginBottom: 30,
     lineHeight: 24,
   },
   browseButton: {
-    backgroundColor: '#138d75',
+    backgroundColor: "#138d75",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
     elevation: 2,
   },
   browseButtonText: {
-    color: 'white',
-    fontFamily: 'banglaSemiBold',
-    fontSize: 16,
+    color: "white",
+    fontFamily: "banglaSemiBold",
   },
   // মডাল স্টাইলস
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '85%',
+    maxHeight: "85%",
     paddingBottom: 20,
   },
   modalHandle: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 12,
   },
   handleBar: {
     width: 40,
     height: 4,
-    backgroundColor: '#ddd',
+    backgroundColor: "#ddd",
     borderRadius: 2,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   modalSurahName: {
     fontSize: 20,
-    fontFamily: 'banglaSemiBold',
-    color: '#2c3e50',
+    fontFamily: "banglaSemiBold",
+    color: "#2c3e50",
   },
   modalAyahNumber: {
     fontSize: 14,
-    fontFamily: 'banglaRegular',
-    color: '#138d75',
+    fontFamily: "banglaRegular",
+    color: "#138d75",
     marginTop: 2,
   },
   modalCloseButton: {
@@ -530,82 +479,82 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   arabicContainer: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
   },
   arabicFullText: {
     fontSize: 22,
-    fontFamily: 'me-quran',
-    textAlign: 'right',
+    fontFamily: "me-quran",
+    textAlign: "right",
     lineHeight: 36,
-    color: '#2c3e50',
-    writingDirection: 'rtl',
+    color: "#2c3e50",
+    writingDirection: "rtl",
   },
   translationContainer: {
     marginBottom: 16,
   },
   translationLabel: {
     fontSize: 14,
-    fontFamily: 'banglaSemiBold',
-    color: '#7f8c8d',
+    fontFamily: "banglaSemiBold",
+    color: "#7f8c8d",
     marginBottom: 8,
   },
   translationFullText: {
     fontSize: 16,
-    fontFamily: 'banglaRegular',
-    color: '#34495e',
+    fontFamily: "banglaRegular",
+    color: "#34495e",
     lineHeight: 24,
   },
   englishFullText: {
     fontSize: 15,
-    fontFamily: 'englishRegular',
-    color: '#34495e',
+    fontFamily: "englishRegular",
+    color: "#34495e",
     lineHeight: 22,
   },
   surahDetails: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     padding: 16,
     borderRadius: 12,
     marginTop: 8,
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
     gap: 10,
   },
   detailText: {
     fontSize: 14,
-    fontFamily: 'banglaRegular',
-    color: '#666',
+    fontFamily: "banglaRegular",
+    color: "#666",
     flex: 1,
   },
   modalActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 20,
     gap: 12,
     marginTop: 16,
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 14,
     borderRadius: 10,
     gap: 8,
   },
   goToButton: {
-    backgroundColor: '#138d75',
+    backgroundColor: "#138d75",
   },
   removeButton: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: "#e74c3c",
   },
   actionButtonText: {
-    color: 'white',
-    fontFamily: 'banglaSemiBold',
+    color: "white",
+    fontFamily: "banglaSemiBold",
     fontSize: 14,
   },
 });

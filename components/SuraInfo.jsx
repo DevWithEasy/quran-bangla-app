@@ -32,7 +32,6 @@ const styles = StyleSheet.create({
   surahInfoContainer: {
     backgroundColor: '#d4efdf',
     padding: 20,
-    margin: 16,
     borderRadius: 12,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -49,7 +48,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   surahName: {
-    fontSize: 22,
+    fontSize:18,
     color: "#138d75",
     marginBottom: 6,
     fontFamily: "banglaSemiBold",

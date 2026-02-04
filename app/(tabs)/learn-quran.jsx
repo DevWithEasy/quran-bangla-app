@@ -236,7 +236,7 @@ export default function QuranCourse() {
         <View style={styles.headerContent}>
           <Ionicons name="school" size={32} color="#fff" />
           <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>কুরআন শিক্ষা কোর্স</Text>
+            <Text style={styles.headerTitle}>২৪ ঘন্টায় কুরআন শিক্ষা</Text>
             <Text style={styles.headerSubtitle}>
               সহজে আরবি পড়া ও কুরআন তিলাওয়াত শিখুন
             </Text>
@@ -269,15 +269,12 @@ export default function QuranCourse() {
       <View style={styles.contentContainer}>
         {/* Introduction Card */}
         <View style={styles.introCard}>
-          <Ionicons name="information-circle" size={24} color="#138d75" />
-          <View style={styles.introTextContainer}>
-            <Text style={styles.introTitle}>কোর্স সম্পর্কে</Text>
+          <Text style={styles.introTitle}>কোর্স সম্পর্কে</Text>
             <Text style={styles.introDescription}>
               এই কোর্সটিতে আপনি সহজ ধাপে কুরআন পড়া এবং তিলাওয়াত শিখবেন।
               প্রতিটি ক্লাসে ভিডিও লেকচার এবং প্র্যাকটিস নোট রয়েছে। ভিডিওতে
-              দীর্ঘক্ষণ টাচ করলে আরও অপশন দেখতে পাবেন।
+              দীর্ঘক্ষণ টাচ করলে আরও অপশন দেখতে পাবেন। এই কোর্সে স্বত্বধিকারী &quot;১০ মিনিট স্কুল&quot;
             </Text>
-          </View>
         </View>
 
         {/* Video List */}
@@ -489,8 +486,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   header: {
-    paddingTop: 40,
-    paddingBottom: 20,
+    paddingVertical: 20,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
@@ -505,8 +501,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 24,
-    fontFamily: "banglaBold",
+    fontSize: 18,
+    fontFamily: "banglaSemiBold",
     color: "#fff",
     marginBottom: 5,
   },
@@ -555,7 +551,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   introCard: {
-    flexDirection: "row",
+    flexDirection: "column",
     backgroundColor: "#fff",
     borderRadius: 15,
     padding: 15,
@@ -571,13 +567,12 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   introTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "banglaSemiBold",
     color: "#2c3e50",
     marginBottom: 5,
   },
   introDescription: {
-    fontSize: 14,
     fontFamily: "banglaRegular",
     color: "#666",
     lineHeight: 20,
@@ -589,8 +584,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontFamily: "banglaBold",
+    fontSize: 18,
+    fontFamily: "banglaSemiBold",
     color: "#2c3e50",
     marginLeft: 10,
     flex: 1,
@@ -667,7 +662,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   videoTitle: {
-    fontSize: 16,
     fontFamily: "banglaSemiBold",
     color: "#2c3e50",
     marginBottom: 8,

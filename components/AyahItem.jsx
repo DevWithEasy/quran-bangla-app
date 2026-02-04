@@ -77,7 +77,7 @@ export default function AyahItem({
         ayah.text_tr
       }\n\n${
         translator === "bn_muhi" ? ayah.text_bn_muhi : ayah.text_bn_haque
-      }\n\n${ayah.text_en}\n\nসোর্স : কুরআন বাংলা অ্যাপ`;
+      }\n\n${ayah.text_en}\n\nসোর্সঃ কুরআন বাংলা অ্যাপ\n\nডাউনলোড করুনঃ https://play.google.com/store/apps/details?id=com.codeorbitstudio.quranbangla`;
       await Clipboard.setStringAsync(ayahText);
       Toast.show({
         type: "success",
@@ -104,7 +104,8 @@ export default function AyahItem({
         ayah.text_tr,
         translator === "bn_muhi" ? ayah.text_bn_muhi : ayah.text_bn_haque,
         ayah.text_en,
-        "সোর্স : কুরআন বাংলা অ্যাপ",
+        "সোর্সঃ কুরআন বাংলা অ্যাপ",
+        "ডাউনলোড করুনঃ https://play.google.com/store/apps/details?id=com.codeorbitstudio.quranbangla",
       ].join("\n\n");
 
       await Share.share({
@@ -327,8 +328,7 @@ const styles = StyleSheet.create({
   ayahContainer: {
     borderRadius: 16,
     padding: 16,
-    marginHorizontal: 16,
-    marginBottom: 16,
+    marginVertical: 4,
     backgroundColor: "#ffffff",
     borderWidth: 1,
     borderColor: "#e8f4f1",

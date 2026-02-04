@@ -23,7 +23,6 @@ export default function SettingsScreen() {
     showBanglaTranslation,
     showBanglaTafseer,
     showEnglishTranslation,
-    loadSettings,
     updateSetting,
   } = useSettingsStore();
 
@@ -61,9 +60,6 @@ export default function SettingsScreen() {
       try {
         setLoading(true);
 
-        // Load settings from AsyncStorage
-        await loadSettings();
-
         // Load reciters data from database
         const recitersData = await DbService.getAllReciters();
 
@@ -87,7 +83,7 @@ export default function SettingsScreen() {
                 { id: 1, name: "মিশারি আল আফাসি" },
                 { id: 2, name: "আব্দুর রহমান আস সুদাইস" },
                 { id: 3, name: "আব্দুল বাসিত" },
-                { id: 4, name: "হানি আর রিফাই" }
+                { id: 4, name: "হানি আর রিফাই" },
               ]);
               setLoading(false);
             },

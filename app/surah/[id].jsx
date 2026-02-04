@@ -1,13 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Audio } from "expo-av";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import { memo, useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AyahItem from "../../components/AyahItem";
 import AyahLoadingScreen from "../../components/AyahLoadingScreen";
 import NoSuraModal from "../../components/NoSuraModal";
-import QuranHeader from "../../components/QuranHeader";
 import SuraInfo from "../../components/SuraInfo";
 import {
   checkAudioFileExist,
@@ -20,6 +19,7 @@ const MemoizedAyahItem = memo(AyahItem);
 
 export default function SurahScreen() {
   const { id, surahData } = useLocalSearchParams();
+  const navigation = useNavigation();
   const surahItem = surahData ? JSON.parse(surahData) : null;
   const [ayahs, setAyahs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +28,15 @@ export default function SurahScreen() {
   const [sound, setSound] = useState(null);
   const [currentAyahId, setCurrentAyahId] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Set dynamic header title
+  useEffect(() => {
+    if (surahItem?.name_bn) {
+      navigation.setOptions({
+        headerTitle: surahItem.name_bn,
+      });
+    }
+  }, [navigation, surahItem]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -119,11 +128,11 @@ export default function SurahScreen() {
 
       // অডিও পাথ এবং টাইমিং ডাটা লোড করুন
       const audioPath = await getFilePath(reciter, surah_id);
-      const timings = await getTiming(reciter, surah_id);
+      const timings = await DbService.getSurahTimestamps(reciter, surah_id);
 
       // বর্তমান এবং পরবর্তী আয়াতের টাইমিং খুঁজুন
-      const currentAyah = timings.find((item) => item.ayah === ayah.ayah_number);
-      const nextAyah = timings.find((item) => item.ayah === ayah.ayah_number + 1);
+      const currentAyah = timings.find((item) => item.ayah_number === ayah.ayah_number);
+      const nextAyah = timings.find((item) => item.ayah_number === ayah.ayah_number + 1);
 
       if (!currentAyah) {
         Alert.alert("ত্রুটি", "এই আয়াতের অডিও টাইমিং পাওয়া যায়নি।");
@@ -208,17 +217,14 @@ export default function SurahScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1 }}>
-        <QuranHeader name={surahItem?.name_bn || "সূরা"} />
+      <View style={{ flex: 1 }}>
         <AyahLoadingScreen surah={surahItem} />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#138d75' }}>
-      <QuranHeader name={surahItem?.name_bn || "সূরা"} />
-
+    <View style={{ flex: 1}}>
       <FlatList
         data={ayahs}
         renderItem={renderAyahItem}
@@ -231,7 +237,7 @@ export default function SurahScreen() {
         removeClippedSubviews={true}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
+        style={{ flex: 1, backgroundColor: '#ffffff' }}
       />
 
       <NoSuraModal
@@ -242,13 +248,13 @@ export default function SurahScreen() {
         onDownloadCancelled={onDownloadCancelled}
         onDownloadComplete={onDownloadComplete}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   listContainer: {
-    paddingBottom: 20,
+    padding: 12,
     backgroundColor: "#ffffff",
   },
   emptyContainer: {

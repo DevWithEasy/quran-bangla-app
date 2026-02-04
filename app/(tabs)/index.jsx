@@ -1,14 +1,13 @@
-import { useNavigation, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -146,7 +145,7 @@ export default function Quran() {
   const list = searchQuery ? filteredSurahs : surahs;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#138d75' }}>
+    <View style={{ flex: 1, backgroundColor: "#138d75" }}>
       <StatusBar backgroundColor="#138d75" barStyle="light-content" />
 
       {/* -------- SURAH LIST -------- */}
@@ -155,8 +154,6 @@ export default function Quran() {
         <View style={styles.hero}>
           <View style={styles.heroHeader}>
             <View>
-              <Text style={styles.heroTitle}>আল কুরআন</Text>
-
               {/* পরিবর্তনশীল উক্তি সেকশন */}
               <View style={styles.quotationContainer}>
                 <Text style={styles.heroSub}>
@@ -349,7 +346,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
   hero: {
-    paddingTop: Platform.OS === "ios" ? 50 : 30,
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: "#138d75",
@@ -362,7 +358,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   heroHeader: {
-    marginBottom: 20,
+    marginBottom: 16,
     paddingTop: 20,
   },
   heroTitle: {
@@ -383,16 +379,14 @@ const styles = StyleSheet.create({
     fontFamily: "banglaRegular",
     color: "white",
     textAlign: "center",
-    fontSize: 15,
     lineHeight: 22,
     marginBottom: 8,
-    fontStyle: "italic",
   },
   quotationSource: {
     fontFamily: "banglaRegular",
     color: "rgba(255, 255, 255, 0.8)",
     textAlign: "center",
-    fontSize: 13,
+    fontSize: 12,
     fontStyle: "italic",
   },
   indicatorContainer: {
@@ -451,6 +445,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 12,
     paddingHorizontal: 12,
+    paddingVertical: 2,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -462,7 +457,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
     color: "#333",
     fontFamily: "banglaRegular",
   },
