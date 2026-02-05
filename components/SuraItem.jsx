@@ -4,7 +4,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function SuraItem({ item }) {
   const router = useRouter();
-  
+
   const handleSurahPress = async (surahItem) => {
     router.push({
       pathname: `/surah/${surahItem.id}`,
@@ -22,15 +22,13 @@ export default function SuraItem({ item }) {
     >
       <View style={styles.surahContainer}>
         <View style={styles.surahNumber}>
-          <Text style={styles.surahNumberText}>
-            {toBengaliNumber(item.id)}
-          </Text>
+          <Text style={styles.surahNumberText}>{toBengaliNumber(item.id)}</Text>
         </View>
-        
+
         <View style={styles.surahInfo}>
           <Text style={styles.surahName}>{item.name_bn}</Text>
           <Text style={styles.meaningBn}>{item.meaning_bn}</Text>
-          
+
           <View style={styles.detailsContainer}>
             <Image
               source={
@@ -48,7 +46,7 @@ export default function SuraItem({ item }) {
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.arabicContainer}>
           <Text style={styles.surahNameArabic}>{item.name_ar}</Text>
           <Text style={styles.meaningEn}>{item.meaning_en}</Text>
