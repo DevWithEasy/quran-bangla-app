@@ -17,6 +17,7 @@ import {
 import Toast from "react-native-toast-message";
 import DbService from "../lib/dbService";
 import useSettingsStore from "../store/settingsStore";
+import ShareImageModal from "./ShareImageModal";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -38,6 +39,7 @@ export default function AyahItem({
   } = useSettingsStore();
   const [modalVisible, setModalVisible] = useState(false);
   const [favoriteExist, setFavoriteExist] = useState(false);
+  const [shareImageModalVisible, setShareImageModalVisible] = useState(false);
 
   const router = useRouter();
 
@@ -171,6 +173,16 @@ export default function AyahItem({
       },
     },
     {
+      id: 5,
+      icon: "image",
+      label: "ছবি শেয়ার করুন",
+      color: "#e74c3c",
+      onPress: () => {
+        setShareImageModalVisible(true);
+        setModalVisible(false);
+      },
+    },
+    {
       id: 6,
       icon: "bookmark",
       label: "বুকমার্ক করুন",
@@ -224,6 +236,18 @@ export default function AyahItem({
           </Text>
         )}
       </View>
+
+      {/* Share Image Modal */}
+      <ShareImageModal
+        visible={shareImageModalVisible}
+        onClose={() => setShareImageModalVisible(false)}
+        surah={surah}
+        ayah={ayah}
+        arabicFont={arabicFont}
+        arabicFontSize={arabicFontSize}
+        banglaFontSize={banglaFontSize}
+        translator={translator}
+      />
 
       {/* Enhanced Bottom Modal - List View */}
       <Modal
@@ -407,7 +431,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: Platform.OS === "ios" ? 40 : 24,
-    maxHeight: SCREEN_HEIGHT * 0.7, // স্ক্রিনের ৭৫% উচ্চতা
+    maxHeight: SCREEN_HEIGHT * 0.7,
     height: SCREEN_HEIGHT * 0.7,
   },
   modalHandle: {

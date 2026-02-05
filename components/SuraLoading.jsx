@@ -1,5 +1,5 @@
-import { StyleSheet, View, Animated, SafeAreaView } from "react-native";
 import { useEffect, useRef } from "react";
+import { Animated, SafeAreaView, StyleSheet, View } from "react-native";
 
 export default function SuraLoading() {
   const opacity = useRef(new Animated.Value(0.3)).current;
@@ -26,13 +26,6 @@ export default function SuraLoading() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
-      {/* হেডার স্কেলেটন */}
-      <View style={styles.headerSkeleton}>
-        <View style={styles.headerBack} />
-        <View style={styles.headerTitle} />
-        <View style={styles.headerSettings} />
-      </View>
-
       {/* বডি */}
       <View style={styles.container}>
         {skeletonItems.map((_, index) => (
@@ -79,32 +72,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
     padding: 16,
-  },
-  headerSkeleton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: "#138d75",
-  },
-  headerBack: {
-    width: 24,
-    height: 24,
-    backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: 4,
-  },
-  headerTitle: {
-    width: 120,
-    height: 20,
-    backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: 4,
-  },
-  headerSettings: {
-    width: 22,
-    height: 22,
-    backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: 4,
   },
   skeletonItem: {
     backgroundColor: "white",

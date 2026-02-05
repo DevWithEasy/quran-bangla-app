@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 const useSettingsStore = create(
   persist(
@@ -8,10 +8,9 @@ const useSettingsStore = create(
       // ===== Default Settings =====
       arabicFont: "me-quran",
       reciter: 1,
-      arabicFontSize: 20,
-      banglaFontSize: 16,
+      arabicFontSize: 22,
+      banglaFontSize: 14,
       translator: "bn_muhi",
-      lastSura: null,
 
       showBanglaTranslation: true,
       showBanglaTafseer: true,
@@ -41,7 +40,6 @@ const useSettingsStore = create(
           arabicFontSize: 20,
           banglaFontSize: 16,
           translator: "bn_muhi",
-          lastSura: null,
           showBanglaTranslation: true,
           showBanglaTafseer: true,
           showEnglishTranslation: false,
@@ -50,8 +48,8 @@ const useSettingsStore = create(
     {
       name: "quran-settings-storage",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );
 
 export default useSettingsStore;

@@ -1,377 +1,550 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { toBengaliNumber } from "bengali-number";
+import * as FileSystem from "expo-file-system";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  Modal,
+  Animated,
+  Image,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import Database from "../lib/database";
-import * as FileSystem from "expo-file-system";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { toBengaliNumber } from "bengali-number";
+
+// ফিচার লিস্ট
+const APP_FEATURES = [
+  {
+    id: 1,
+    icon: "📖",
+    title: "সম্পূর্ণ বাংলা অনুবাদ",
+    description:
+      "হাফেজ মুনির উদ্দিন হক ও ড. আবু বকর মুহাম্মাদ যাকারিয়ার অনুবাদ",
+  },
+  {
+    id: 2,
+    icon: "🎧",
+    title: "কুরআন তেলাওয়াত",
+    description: "বিশিষ্ট ক্বারীদের কণ্ঠে পূর্ণ কুরআন শুনুন",
+  },
+  {
+    id: 3,
+    icon: "🔍",
+    title: "দ্রুত সার্চ",
+    description: "যেকোনো আয়াত বা সূরা মুহূর্তেই খুঁজে পান",
+  },
+  {
+    id: 4,
+    icon: "⭐",
+    title: "ফেভারিট আয়াত",
+    description: "প্রিয় আয়াতগুলো সেভ করে রাখুন",
+  },
+  {
+    id: 5,
+    icon: "📱",
+    title: "অফলাইন এক্সেস",
+    description: "ইন্টারনেট ছাড়াই সব সুবিধা ভোগ করুন",
+  },
+  {
+    id: 6,
+    icon: "🎓",
+    title: "ভিডিও কোর্স",
+    description: "বেসিক থেকে অ্যাডভান্সড কুরআন শিক্ষা",
+  },
+];
 
 export default function DownloadScreen() {
   const [initializing, setInitializing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [estimatedSize, setEstimatedSize] = useState("২.৫");
+  const [showFeatures, setShowFeatures] = useState(false);
+  const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0);
+  const [featureTimer, setFeatureTimer] = useState(null);
+  const [fadeAnim] = useState(new Animated.Value(1));
+  const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const router = useRouter();
-
-  const checkExistingData = async () => {
-    try {
-      // AsyncStorage এ চেক করুন ডাটাবেজ ইনিশিয়ালাইজড হয়েছে কিনা
-      const dbInitialized = await AsyncStorage.getItem('database_initialized');
-      return dbInitialized === 'true';
-    } catch (error) {
-      console.error('Error checking existing data:', error);
-      return false;
-    }
-  };
 
   const checkDatabaseFile = async () => {
     try {
       const dbPath = `${FileSystem.documentDirectory}SQLite/quran.db`;
       const fileInfo = await FileSystem.getInfoAsync(dbPath);
       return fileInfo.exists;
-    } catch (error) {
-      console.error('Error checking database file:', error);
+    } catch {
       return false;
     }
   };
 
   const initializeDatabase = async () => {
-    const hasFile = await checkDatabaseFile();
-    if (hasFile) {
-      try {
-        setCurrentStep("ডাটাবেজ লোড হচ্ছে...");
-        await Database.initialize();
-        return true;
-      } catch (error) {
-        console.error('Error initializing existing database:', error);
-        return false;
+    try {
+      const hasFile = await checkDatabaseFile();
+
+      if (!hasFile) {
+        setIsFirstTimeSetup(true);
+        setCurrentStep("ডাটাবেজ প্রস্তুত হচ্ছে...");
+        setProgress(5);
+        await new Promise((r) => setTimeout(r, 300));
+
+        setCurrentStep("ডাটাবেজ ফাইল তৈরি করা হচ্ছে...");
+        setProgress(15);
+        await new Promise((r) => setTimeout(r, 300));
       }
+
+      setCurrentStep("ডাটাবেজ লোড হচ্ছে...");
+      setProgress(30);
+      await new Promise((r) => setTimeout(r, 300));
+
+      await Database.initialize();
+
+      setCurrentStep("ইনডেক্স তৈরি হচ্ছে...");
+      setProgress(80);
+      await new Promise((r) => setTimeout(r, 800));
+
+      setCurrentStep("সেটআপ সম্পন্ন হচ্ছে...");
+      setProgress(100);
+      await new Promise((r) => setTimeout(r, 300));
+
+      await AsyncStorage.setItem("reciter", "4");
+      await AsyncStorage.setItem("database_initialized", "true");
+
+      return true;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
-    return false;
   };
 
-  const handleInitialize = async () => {
-    setInitializing(true);
-    setShowModal(false);
-    setProgress(0);
+  const startFeatureRotation = () => {
+    // প্রতি ২.৫ সেকেন্ডে ফিচার পরিবর্তন
+    const timer = setInterval(() => {
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
 
+      setCurrentFeatureIndex((prevIndex) =>
+        prevIndex === APP_FEATURES.length - 1 ? 0 : prevIndex + 1,
+      );
+    }, 2500);
+
+    setFeatureTimer(timer);
+
+    // ১২ সেকেন্ড পর অটোমেটিক ট্যাবে নিয়ে যাবে (প্রথমবার সেটআপের জন্য)
+    setTimeout(() => {
+      clearInterval(timer);
+      if (isFirstTimeSetup) {
+        router.replace("/(tabs)");
+      }
+    }, 12000);
+  };
+
+  const handleAppStart = async () => {
     try {
-      // ধাপ ১: ডাটাবেজ ফাইল চেক
-      setCurrentStep("ডাটাবেজ ফাইল চেক করা হচ্ছে...");
-      setProgress(0.1);
-      
-      const hasExistingDb = await initializeDatabase();
-      if (hasExistingDb) {
-        console.log('✅ Using existing database');
-        await AsyncStorage.setItem("reciter", "4");
+      const isInitialized = await AsyncStorage.getItem("database_initialized");
+      const hasFile = await checkDatabaseFile();
+
+      if (isInitialized === "true" && hasFile) {
+        // ডাটাবেজ ইতিমধ্যে আছে, সরাসরি হোমপেজে নিয়ে যান
         router.replace("/(tabs)");
         return;
       }
 
-      // ধাপ ২: নতুন ডাটাবেজ ইনিশিয়ালাইজেশন
-      setCurrentStep("ডাটাবেজ প্রস্তুত হচ্ছে...");
-      setProgress(0.3);
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // প্রথমবার ইনিশিয়ালাইজেশন
+      setInitializing(true);
+      setIsFirstTimeSetup(true);
+      setProgress(0);
+      setCurrentStep("");
 
-      setCurrentStep("ডাটাবেজ ইনিশিয়ালাইজ করা হচ্ছে...");
-      setProgress(0.6);
-      
-      const db = await Database.initialize();
-      
-      setCurrentStep("ডাটাবেজ যাচাই করা হচ্ছে...");
-      setProgress(0.8);
-      
-      // ডাটাবেজ টেস্ট ক্যুয়েরি
-      const surahCount = await Database.query("SELECT COUNT(*) as count FROM surah");
-      console.log('📊 Total surahs:', surahCount[0]?.count || 0);
-      
-      if (!surahCount[0]?.count || surahCount[0].count === 0) {
-        throw new Error('ডাটাবেজে কোনো সূরা পাওয়া যায়নি');
-      }
+      // প্রথমে ফিচার দেখানো শুরু করুন
+      setShowFeatures(true);
+      startFeatureRotation();
 
-      setCurrentStep("সেটআপ সম্পন্ন হচ্ছে...");
-      setProgress(1);
-      
-      await AsyncStorage.setItem("reciter", "4");
-      
-      // সাফল্যের জন্য একটু অপেক্ষা করুন
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      router.replace("/(tabs)");
-      
+      // তারপর ডাটাবেজ ইনিশিয়ালাইজেশন শুরু করুন
+      await initializeDatabase();
+
+      // ডাটাবেজ তৈরি হওয়ার পর আরও ২ সেকেন্ড ফিচার দেখানোর পর রিডাইরেক্ট
+      setTimeout(() => {
+        if (featureTimer) {
+          clearInterval(featureTimer);
+        }
+        router.replace("/(tabs)");
+      }, 2000);
     } catch (error) {
-      console.error('❌ Database initialization failed:', error);
-      
-      Alert.alert(
-        "ত্রুটি",
-        `ডাটাবেজ ইনিশিয়ালাইজেশনে সমস্যা হয়েছে: ${error.message}`,
-        [
-          { 
-            text: "আবার চেষ্টা করুন", 
-            onPress: () => {
-              Database.resetDb().then(() => {
-                handleInitialize();
-              });
-            }
-          },
-          { 
-            text: "বাতিল করুন", 
-            style: "cancel",
-            onPress: () => {
-              setInitializing(false);
-              setShowModal(true);
-            }
-          }
-        ]
-      );
-    } finally {
-      setInitializing(false);
+      console.log("Error in app start:", error);
+      // এরর হলেও হোমপেজে নিয়ে যান
+      router.replace("/(tabs)");
     }
   };
 
+  const handleSkipFeatures = () => {
+    if (featureTimer) {
+      clearInterval(featureTimer);
+    }
+    router.replace("/(tabs)");
+  };
+
   useEffect(() => {
-    const initApp = async () => {
-      try {
-        // প্রথমে চেক করুন ডাটাবেজ ইতিমধ্যেই প্রস্তুত কিনা
-        const hasData = await checkExistingData();
-        const hasFile = await checkDatabaseFile();
-        
-        console.log('📊 App initialization check:', { hasData, hasFile });
-        
-        if (hasData && hasFile) {
-          // ডাটাবেজ ইতিমধ্যে আছে, সরাসরি হোমে নিয়ে যান
-          console.log('✅ Database already initialized, redirecting...');
-          router.replace("/(tabs)");
-        } else if (hasFile) {
-          // ফাইল আছে কিন্তু ইনিশিয়ালাইজড নয়
-          console.log('📁 Database file exists but not initialized');
-          setShowModal(true);
-        } else {
-          // কোনো ফাইল নেই, ইনিশিয়ালাইজেশন প্রয়োজন
-          console.log('📭 No database file found, showing modal');
-          setShowModal(true);
-        }
-      } catch (error) {
-        console.error('❌ Error during app initialization:', error);
-        setShowModal(true);
+    handleAppStart();
+
+    return () => {
+      if (featureTimer) {
+        clearInterval(featureTimer);
       }
     };
-
-    initApp();
   }, []);
 
-  if (initializing) {
+  /* ---------- Feature Showcase Screen (শুধু প্রথমবার সেটআপের সময়) ---------- */
+  if (showFeatures && isFirstTimeSetup) {
+    const currentFeature = APP_FEATURES[currentFeatureIndex];
+
     return (
       <View style={styles.container}>
-        <View style={styles.downloadContainer}>
-          <Text style={styles.title}>{currentStep}</Text>
-          <Text style={styles.percentage}>
-            {toBengaliNumber(Math.round(progress * 100))}%
-          </Text>
-          
-          {/* প্রোগ্রেস বার */}
-          <View style={styles.progressBarContainer}>
-            <View 
-              style={[
-                styles.progressBar, 
-                { width: `${progress * 100}%` }
-              ]} 
-            />
+        {/* উপরের অংশ: লোডিং স্ট্যাটাস */}
+        <View style={styles.topSection}>
+          <Image
+            source={require("../assets/images/icon.png")}
+            style={styles.logo}
+          />
+
+          <Text style={styles.title}>কুরআন বাংলা</Text>
+
+          {initializing && (
+            <>
+              <Text style={styles.stepText}>{currentStep}</Text>
+
+              <View style={styles.progressContainer}>
+                <Text style={styles.percentage}>
+                  {toBengaliNumber(Math.round(progress))}%
+                </Text>
+
+                <View style={styles.progressBarContainer}>
+                  <View
+                    style={[styles.progressBar, { width: `${progress}%` }]}
+                  />
+                </View>
+              </View>
+
+              <ActivityIndicator
+                size="large"
+                color="#ffffff"
+                style={styles.spinner}
+              />
+            </>
+          )}
+        </View>
+
+        {/* নিচের অংশ: ফিচার ডিসপ্লে */}
+        <View style={styles.bottomSection}>
+          <Animated.View style={[styles.featureCard, { opacity: fadeAnim }]}>
+            <Text style={styles.featureIcon}>{currentFeature.icon}</Text>
+            <Text style={styles.featureTitle}>{currentFeature.title}</Text>
+            <Text style={styles.featureDescription}>
+              {currentFeature.description}
+            </Text>
+          </Animated.View>
+
+          {/* প্রোগ্রেস ডটস */}
+          <View style={styles.progressDots}>
+            {APP_FEATURES.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  index === currentFeatureIndex
+                    ? styles.activeDot
+                    : styles.inactiveDot,
+                ]}
+              />
+            ))}
           </View>
-          
-          <ActivityIndicator size="large" color="#138d75" style={styles.spinner} />
-          
-          <Text style={styles.size}>
-            আনুমানিক ফাইল সাইজ: {estimatedSize} MB
-          </Text>
+
+          {/* তথ্য বক্স */}
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>
+              ⏳ প্রথমবার সেটআপ চলছে, অল্প সময় অপেক্ষা করুন...
+            </Text>
+            <Text style={styles.infoText}>✅ পরবর্তীতে দ্রুত ওপেন হবে</Text>
+          </View>
         </View>
       </View>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <Modal
-        visible={showModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          // মডাল বন্ধ করতে দেবেন না, ইউজারকে ইনিশিয়ালাইজ করতেই হবে
-          Alert.alert(
-            "প্রয়োজনীয়",
-            "অ্যাপটি ব্যবহার করতে ডাটাবেজ ইনিশিয়ালাইজ করা আবশ্যক।",
-            [{ text: "ঠিক আছে", style: "default" }]
-          );
-        }}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>ডাটাবেজ সেটআপ</Text>
-            
-            <View style={styles.infoBox}>
-              <Text style={styles.infoText}>
-                📖 কুরআন মাজীদের ডাটাবেজ সেটআপ প্রয়োজন
-              </Text>
-              <Text style={styles.infoText}>
-                💾 আনুমানিক সাইজ: {estimatedSize} MB
-              </Text>
-              <Text style={styles.infoText}>
-                ⚡ ইন্টারনেট সংযোগ প্রয়োজন
-              </Text>
-              <Text style={styles.infoText}>
-                ✅ একবার সেটআপ করার পর প্রয়োজন হবে না
-              </Text>
-            </View>
-            
-            <View style={styles.buttonGroup}>
-              <TouchableOpacity
-                style={[styles.button, styles.primaryButton]}
-                onPress={handleInitialize}
-              >
-                <Text style={styles.buttonText}>সেটআপ শুরু করুন</Text>
-              </TouchableOpacity>
-              
-              <Text style={styles.note}>
-                প্রথমবার সেটআপ করতে কয়েক মিনিট সময় লাগতে পারে
-              </Text>
+  /* ---------- শুধু লোডিং স্ক্রিন (যদি কোন কারনে ফিচার না দেখানো হয়) ---------- */
+  if (initializing && !showFeatures) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.downloadContainer}>
+          <Image
+            source={require("../assets/images/icon.png")}
+            style={styles.downloadLogo}
+          />
+
+          <Text style={styles.title}>{currentStep}</Text>
+
+          <View style={styles.progressContainer}>
+            <Text style={styles.percentage}>
+              {toBengaliNumber(Math.round(progress))}%
+            </Text>
+
+            <View style={styles.progressBarContainer}>
+              <View style={[styles.progressBar, { width: `${progress}%` }]} />
             </View>
           </View>
+
+          <ActivityIndicator
+            size="large"
+            color="#ffffff"
+            style={styles.spinner}
+          />
+
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>
+              ⚡ প্রথমবার সেটআপ হতে সময় লাগতে পারে
+            </Text>
+            <Text style={styles.infoText}>
+              ✅ একবার সেটআপ করার পর প্রয়োজন হবে না
+            </Text>
+          </View>
         </View>
-      </Modal>
+      </View>
+    );
+  }
+
+  /* ---------- Initial Loading (খুব অল্প সময়ের জন্য) ---------- */
+  return (
+    <View style={styles.container}>
+      <View style={styles.initialLoading}>
+        <Image
+          source={require("../assets/images/icon.png")}
+          style={styles.loadingLogo}
+        />
+        <ActivityIndicator
+          size="large"
+          color="#ffffff"
+          style={styles.loadingSpinner}
+        />
+        <Text style={styles.loadingText}>অ্যাপ চেক করা হচ্ছে...</Text>
+      </View>
     </View>
   );
 }
 
+/* ================== Styles ================== */
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#138d75",
+  },
+
+  /* Feature Screen Styles */
+  topSection: {
+    flex: 1.2,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 24,
+    paddingTop: 40,
   },
+  logo: {
+    width: 80,
+    height: 80,
+    marginTop: 30,
+  },
+  title: {
+    fontSize: 24,
+    fontFamily: "banglaSemiBold",
+    color: "#ffffff",
+    marginBottom: 20,
+  },
+  stepText: {
+    fontSize: 16,
+    fontFamily: "banglaRegular",
+    color: "#ffffff",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  progressContainer: {
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 20,
+  },
+  percentage: {
+    fontSize: 28,
+    fontFamily: "banglaSemiBold",
+    color: "#ffffff",
+    marginBottom: 10,
+  },
+  progressBarContainer: {
+    width: "80%",
+    height: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: "#ffffff",
+    borderRadius: 4,
+  },
+  spinner: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  divider: {
+    paddingHorizontal: 20,
+    marginVertical: 10,
+    alignItems: "center",
+  },
+  dividerText: {
+    fontSize: 15,
+    fontFamily: "banglaSemiBold",
+    color: "#ffffff",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  bottomSection: {
+    flex: 1.5,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 10,
+    marginHorizontal: 10,
+    marginBottom: 10,
+  },
+  featureCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 15,
+    padding: 10,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  featureIcon: {
+    fontSize: 50,
+    marginBottom: 15,
+  },
+  featureTitle: {
+    fontSize: 20,
+    fontFamily: "banglaSemiBold",
+    color: "#ffffff",
+    textAlign: "center",
+    marginBottom: 10,
+    lineHeight: 26,
+  },
+  featureDescription: {
+    fontSize: 14,
+    fontFamily: "banglaRegular",
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  progressDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: "#ffffff",
+    width: 10,
+    height: 10,
+  },
+  inactiveDot: {
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+  },
+  infoBox: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  infoText: {
+    fontSize: 12,
+    fontFamily: "banglaRegular",
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
+    marginBottom: 4,
+    lineHeight: 16,
+  },
+  footer: {
+    alignItems: "center",
+  },
+  featureCounter: {
+    fontSize: 13,
+    fontFamily: "banglaRegular",
+    color: "rgba(255, 255, 255, 0.8)",
+    marginBottom: 10,
+  },
+  skipButton: {
+    fontSize: 14,
+    fontFamily: "banglaSemiBold",
+    color: "#ffffff",
+    paddingVertical: 8,
+    paddingHorizontal: 25,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    overflow: "hidden",
+    marginBottom: 15,
+  },
+  timerBar: {
+    width: "80%",
+    height: 3,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 1.5,
+    overflow: "hidden",
+  },
+  timerProgress: {
+    height: "100%",
+    backgroundColor: "#ffffff",
+  },
+
+  /* Download Screen Styles (বিকল্প) */
   downloadContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    width: "100%",
   },
-  title: {
-    fontSize: 18,
-    fontFamily: "banglaSemiBold",
-    marginBottom: 20,
-    color: "#333333",
-    textAlign: "center",
-  },
-  percentage: {
-    fontSize: 32,
-    fontFamily: "banglaSemiBold",
-    color: "#138d75",
-    marginBottom: 20,
-  },
-  progressBarContainer: {
-    width: "80%",
-    height: 8,
-    backgroundColor: "#e0e0e0",
-    borderRadius: 4,
+  downloadLogo: {
+    width: 100,
+    height: 100,
     marginBottom: 30,
-    overflow: "hidden",
   },
-  progressBar: {
-    height: "100%",
-    backgroundColor: "#138d75",
-    borderRadius: 4,
-  },
-  spinner: {
-    marginBottom: 20,
-  },
-  size: {
-    fontSize: 14,
-    fontFamily: "banglaRegular",
-    color: "#666666",
-    textAlign: "center",
-  },
-  modalBackground: {
+
+  /* Initial Loading Styles */
+  initialLoading: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
-  modalContent: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 24,
-    width: "100%",
-    maxWidth: 400,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+  loadingLogo: {
+    width: 120,
+    height: 120,
+    marginBottom: 30,
   },
-  modalTitle: {
-    fontSize: 22,
-    fontFamily: "banglaSemiBold",
+  loadingSpinner: {
     marginBottom: 20,
-    color: "#138d75",
-    textAlign: "center",
   },
-  infoBox: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    width: "100%",
-  },
-  infoText: {
-    fontSize: 14,
+  loadingText: {
+    fontSize: 18,
     fontFamily: "banglaRegular",
-    color: "#495057",
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  buttonGroup: {
-    width: "100%",
-    alignItems: "center",
-  },
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  primaryButton: {
-    backgroundColor: "#138d75",
-  },
-  buttonText: {
-    fontSize: 16,
-    fontFamily: "banglaSemiBold",
     color: "#ffffff",
-  },
-  note: {
-    fontSize: 12,
-    fontFamily: "banglaRegular",
-    color: "#6c757d",
-    textAlign: "center",
-    fontStyle: "italic",
-    marginTop: 8,
   },
 });

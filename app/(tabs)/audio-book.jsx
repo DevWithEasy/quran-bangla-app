@@ -198,13 +198,6 @@ export default function AudioBook() {
       );
 
       soundRef.current = newSound;
-
-      Toast.show({
-        type: "success",
-        text1: "অডিও শুরু হয়েছে",
-        text2: `${surah.name_bn} - ${getCurrentReciterName()}`,
-        visibilityTime: 2000,
-      });
     } catch (error) {
       console.error("Playback error:", error);
       Toast.show({
@@ -350,6 +343,70 @@ export default function AudioBook() {
     setModalVisible(false);
     setDownloadingSurah(null);
   };
+
+  useEffect(() => {
+    async function setupAudio() {
+      try {
+        await Audio.setAudioModeAsync({
+          staysActiveInBackground: true,
+          playsInSilentModeIOS: true,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+        });
+      } catch (e) {
+        console.log("Audio mode setup error:", e);
+      }
+    }
+
+    async function loadData() {
+      try {
+        setLoading(true);
+        console.log("Loading surahs and reciters from database...");
+
+        const surahsData = await DbService.getAllSurahs();
+        const recitersData = await DbService.getAllReciters();
+
+        if (surahsData && surahsData.length > 0) {
+          const formattedSurahs = formatSurahsData(surahsData);
+          setSurahs(formattedSurahs);
+        } else {
+          throw new Error("ডাটাবেজে কোন সূরা পাওয়া যায়নি");
+        }
+
+        if (recitersData && recitersData.length > 0) {
+          const formattedReciters = formatRecitersData(recitersData);
+          setReciters(formattedReciters);
+          setSelectedReciter(formattedReciters[0].id);
+        } else {
+          throw new Error("ডাটাবেজে কোন ক্বারী পাওয়া যায়নি");
+        }
+      } catch (error) {
+        console.error("Database error:", error);
+        Alert.alert("ত্রুটি", "ডেটা লোড করতে সমস্যা হয়েছে", [
+          {
+            text: "পুনরায় চেষ্টা করুন",
+            onPress: () => loadData(),
+          },
+          {
+            text: "ডাউনলোড পৃষ্ঠায় যান",
+            onPress: () => router.replace("/"),
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    setupAudio();
+    loadData();
+
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    };
+  }, []);
 
   if (loading) {
     return (

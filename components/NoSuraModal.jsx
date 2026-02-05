@@ -10,12 +10,8 @@ import {
   Text,
   View,
 } from "react-native";
-import Toast from "react-native-toast-message";
 import DbService from "../lib/dbService";
-import {
-  getFilePath,
-  getFolderPath
-} from "../utils/audioControllers";
+import { getFilePath, getFolderPath } from "../utils/audioControllers";
 
 export default function NoSuraModal({
   modalVisible,
@@ -87,13 +83,6 @@ export default function NoSuraModal({
 
       await downloadResumableRef.current.downloadAsync();
 
-      Toast.show({
-        type: "success",
-        text1: "সফল হয়েছে",
-        text2: "সুরাটি ডাউনলোড হয়েছে। এখন প্লে করুন 👋",
-        visibilityTime: 3000,
-      });
-
       setIsDownloading(false);
       setModalVisible(false);
 
@@ -110,11 +99,6 @@ export default function NoSuraModal({
       try {
         await downloadResumableRef.current.pauseAsync?.();
         downloadResumableRef.current = null;
-        Toast.show({
-          type: "info",
-          text1: "ডাউনলোড বাতিল হয়েছে",
-          visibilityTime: 2000,
-        });
         setIsDownloading(false);
         setDownloadProgress(0);
         setModalVisible(false);

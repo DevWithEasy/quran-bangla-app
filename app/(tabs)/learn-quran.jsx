@@ -321,7 +321,7 @@ export default function QuranCourse() {
                     <Ionicons
                       name="checkmark-circle"
                       size={16}
-                      color="#fff"
+                      color="#138d75"
                       style={styles.completedIcon}
                     />
                   )}
@@ -698,8 +698,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   playButton: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: 22,
     backgroundColor: "#138d75",
     justifyContent: "center",

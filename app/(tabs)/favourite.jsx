@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { toBengaliNumber } from "bengali-number";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import DbService from "../../lib/dbService";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Favourite() {
   const router = useRouter();
@@ -27,7 +28,6 @@ export default function Favourite() {
     try {
       setLoading(true);
       const data = await DbService.getFavorites();
-      console.log("Favorites loaded:", data);
       setFavorites(data || []);
     } catch (error) {
       console.error("Error loading favorites:", error);
@@ -38,18 +38,20 @@ export default function Favourite() {
     }
   };
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     loadData();
-  }, []);
+  }, [])
+);
 
   const handleRefresh = () => {
     setRefreshing(true);
     loadData();
   };
 
-  const handleRemoveFavorite = async (surah_id,ayah_number) => {
+  const handleRemoveFavorite = async (surah_id, ayah_number) => {
     try {
-      await DbService.removeFavorite(surah_id,ayah_number);
+      await DbService.removeFavorite(surah_id, ayah_number);
       loadData();
       setModalVisible(false);
     } catch (error) {
@@ -140,7 +142,7 @@ export default function Favourite() {
       </Text>
       <TouchableOpacity
         style={styles.browseButton}
-        onPress={() => router.push("/quran")}
+        onPress={() => router.replace("/(tabs)")}
       >
         <Text style={styles.browseButtonText}>কুরআন ব্রাউজ করুন</Text>
       </TouchableOpacity>
@@ -252,7 +254,12 @@ export default function Favourite() {
 
               <TouchableOpacity
                 style={[styles.actionButton, styles.removeButton]}
-                onPress={() => handleRemoveFavorite(selectedItem.surah_id,selectedItem.ayah_number)}
+                onPress={() =>
+                  handleRemoveFavorite(
+                    selectedItem.surah_id,
+                    selectedItem.ayah_number,
+                  )
+                }
               >
                 <Ionicons name="trash-outline" size={20} color="white" />
                 <Text style={styles.actionButtonText}>ফেভারিট থেকে সরান</Text>
@@ -266,10 +273,12 @@ export default function Favourite() {
 
   if (loading) {
     return (
-      <View style={styles.safeArea}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>ফেভারিট</Text>
-        </View>
+      <View
+        style={[
+          styles.safeArea,
+          { justifyContent: "center", alignContent: "center" },
+        ]}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#138d75" />
           <Text style={styles.loadingText}>ফেভারিট লোড হচ্ছে...</Text>

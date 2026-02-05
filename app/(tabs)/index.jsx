@@ -7,7 +7,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -137,9 +137,21 @@ export default function Quran() {
     }
 
     router.push({
-      pathname: `/surah/${selectedSurah.serial}`,
-      params: { ayah: ayahNumber },
+      pathname: `/goto/${selectedSurah.serial}/${ayahNumber}`,
+      params: {
+        surahData: JSON.stringify(selectedSurah),
+      },
     });
+  };
+
+  // About পেজে নেভিগেট
+  const navigateToAbout = () => {
+    router.push("/about");
+  };
+
+  // Privacy Policy পেজে নেভিগেট
+  const navigateToPrivacy = () => {
+    router.push("/privacy");
   };
 
   const list = searchQuery ? filteredSurahs : surahs;
@@ -178,6 +190,27 @@ export default function Quran() {
                 ))}
               </View>
             </View>
+          </View>
+
+          {/* About & Privacy Buttons */}
+          <View style={styles.infoButtonsContainer}>
+            <TouchableOpacity
+              style={styles.infoButton}
+              onPress={navigateToAbout}
+            >
+              <Ionicons name="information-circle" size={18} color="white" />
+              <Text style={styles.infoButtonText}>এপ সম্পর্কে</Text>
+            </TouchableOpacity>
+
+            <View style={styles.separator} />
+
+            <TouchableOpacity
+              style={styles.infoButton}
+              onPress={navigateToPrivacy}
+            >
+              <Ionicons name="shield-checkmark" size={18} color="white" />
+              <Text style={styles.infoButtonText}>প্রাইভেসি পলিসি</Text>
+            </TouchableOpacity>
           </View>
 
           {/* -------- TABS -------- */}
@@ -407,6 +440,34 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 5,
+  },
+  // About & Privacy Buttons
+  infoButtonsContainer: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  infoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    gap: 8,
+  },
+  infoButtonText: {
+    color: "white",
+    fontFamily: "banglaRegular",
+    fontSize: 14,
+  },
+  separator: {
+    width: 1,
+    height: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
   },
   tabsContainer: {
     flexDirection: "row",
