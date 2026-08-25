@@ -179,7 +179,7 @@ export default function About() {
             
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>আপডেট তারিখ</Text>
-              <Text style={styles.infoValue}>০৬ ফেব্রুয়ারি, ২০২৬</Text>
+              <Text style={styles.infoValue}>২৫ আগষ্ট, ২০২৬</Text>
             </View>
             
             <View style={styles.infoItem}>

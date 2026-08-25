@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Network from "expo-network";
 import { useEffect, useRef, useState } from "react";
 import {

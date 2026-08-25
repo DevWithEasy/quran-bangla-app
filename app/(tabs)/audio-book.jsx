@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { toBengaliNumber } from "bengali-number";
 import { Audio } from "expo-av";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {

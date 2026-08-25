@@ -11,7 +11,9 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -38,7 +40,9 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

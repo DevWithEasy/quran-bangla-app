@@ -1,69 +1,109 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router/tabs";
+import { usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   Animated,
-  Dimensions,
   Platform,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 
-const { width } = Dimensions.get("window");
+const TABS = [
+  { name: "index", label: "কুরআন", active: "book", inactive: "book-outline" },
+  {
+    name: "audio-book",
+    label: "অডিও",
+    active: "headset",
+    inactive: "headset-outline",
+  },
+  {
+    name: "favourite",
+    label: "পছন্দ",
+    active: "heart",
+    inactive: "heart-outline",
+  },
+  {
+    name: "learn-quran",
+    label: "শিখুন",
+    active: "school",
+    inactive: "school-outline",
+  },
+];
 
-export default function TabsLayout() {
-  const [activeTab, setActiveTab] = useState("index");
-  const indicatorAnim = useRef(new Animated.Value(0)).current;
-  const tabWidth = width / 4;
+/** Animated icon with soft pill background that scales/fades in on focus */
+function TabIcon({ focused, active, inactive, color }) {
+  const scale = useRef(new Animated.Value(focused ? 1 : 0.85)).current;
+  const glow = useRef(new Animated.Value(focused ? 1 : 0)).current;
 
-  const handleTabPress = (index, name, onPress) => {
-    Animated.spring(indicatorAnim, {
-      toValue: index,
-      useNativeDriver: true,
-      tension: 100,
-      friction: 12,
-    }).start();
+  useEffect(() => {
+    // Both values are animated on the native driver — never mix drivers
+    // on parallel animations (crashes on RN 0.81+).
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: focused ? 1 : 0.85,
+        useNativeDriver: true,
+        friction: 7,
+        tension: 120,
+      }),
+      Animated.timing(glow, {
+        toValue: focused ? 1 : 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [focused, scale, glow]);
 
-    setActiveTab(name);
-
-    if (onPress) onPress();
-  };
-
-  const renderIcon = (isActive, active, inactive, color) => (
-    <View style={styles.iconContainer}>
-      <View
-        style={[
-          styles.iconWrapper,
-          isActive && styles.iconWrapperActive,
-        ]}
-      >
-        <Ionicons
-          name={isActive ? active : inactive}
-          size={isActive ? 26 : 22}
-          color={color}
-        />
-      </View>
-      {isActive && <View style={styles.activeDot} />}
+  return (
+    <View style={styles.iconWrapper}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.iconPill, { opacity: glow }]}
+      />
+      <Animated.View style={[{ transform: [{ scale }] }]}>
+        <Ionicons name={focused ? active : inactive} size={24} color={color} />
+      </Animated.View>
     </View>
   );
+}
 
-  const renderLabel = (label, isActive, color) => (
-    <View style={styles.labelContainer}>
-      <Text
-        style={[
-          styles.labelText,
-          {
-            color,
-            fontFamily: isActive
-              ? "banglaSemiBold"
-              : "banglaRegular",
-          },
-        ]}
-      >
-        {label}
-      </Text>
+export default function TabsLayout() {
+  const pathname = usePathname();
+  const { width } = useWindowDimensions();
+
+  // Derive the focused tab from the actual route — no state drift
+  const activeIndex = Math.max(
+    TABS.findIndex((t) =>
+      t.name === "index" ? pathname === "/" : pathname.startsWith(`/${t.name}`)
+    ),
+    0
+  );
+
+  const indicatorAnim = useRef(new Animated.Value(activeIndex)).current;
+
+  useEffect(() => {
+    Animated.spring(indicatorAnim, {
+      toValue: activeIndex,
+      useNativeDriver: true,
+      friction: 9,
+      tension: 110,
+    }).start();
+  }, [activeIndex, indicatorAnim]);
+
+  const translateX = indicatorAnim.interpolate({
+    inputRange: TABS.map((_, i) => i),
+    outputRange: TABS.map((_, i) => i * (width / TABS.length)),
+  });
+
+  // Rendered inside the tab bar so it stays aligned (edge-to-edge safe)
+  const tabBarBackground = () => (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Animated.View style={[styles.indicator, { transform: [{ translateX }] }]}>
+        <View style={styles.indicatorBar} />
+      </Animated.View>
     </View>
   );
 
@@ -74,7 +114,7 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: "#ffffff",
-          tabBarInactiveTintColor: "rgba(255,255,255,0.7)",
+          tabBarInactiveTintColor: "rgba(255,255,255,0.72)",
           tabBarStyle: styles.tabBar,
 
           headerShown: true,
@@ -84,160 +124,50 @@ export default function TabsLayout() {
           headerTintColor: "#ffffff",
 
           tabBarHideOnKeyboard: true,
+          tabBarBackground,
         }}
       >
-        {/* ---------- Quran ---------- */}
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "কুরআন বাংলা",
-            tabBarIcon: ({ color }) =>
-              renderIcon(
-                activeTab === "index",
-                "book",
-                "book-outline",
-                color
-              ),
-            tabBarLabel: ({ color }) =>
-              renderLabel(
-                "কুরআন",
-                activeTab === "index",
-                color
-              ),
-            tabBarButton: (props) => {
-              const { onPress, ...rest } = props;
-              return (
-                <View
-                  {...rest}
-                  onTouchStart={() =>
-                    handleTabPress(0, "index", onPress)
-                  }
-                  style={styles.tabButton}
+        {TABS.map((tab) => (
+          <Tabs.Screen
+            key={tab.name}
+            name={tab.name}
+            options={{
+              title:
+                tab.name === "index"
+                  ? "কুরআন বাংলা"
+                  : tab.name === "audio-book"
+                    ? "অডিও কুরআন"
+                    : tab.name === "favourite"
+                      ? "পছন্দসমূহ"
+                      : "কুরআন শিখুন",
+              tabBarIcon: ({ color, focused }) => (
+                <TabIcon
+                  focused={focused}
+                  active={tab.active}
+                  inactive={tab.inactive}
+                  color={color}
                 />
-              );
-            },
-          }}
-        />
-
-        {/* ---------- Audio ---------- */}
-        <Tabs.Screen
-          name="audio-book"
-          options={{
-            title: "অডিও কুরআন",
-            tabBarIcon: ({ color }) =>
-              renderIcon(
-                activeTab === "audio-book",
-                "headset",
-                "headset-outline",
-                color
               ),
-            tabBarLabel: ({ color }) =>
-              renderLabel(
-                "অডিও",
-                activeTab === "audio-book",
-                color
+              tabBarLabel: ({ color, focused }) => (
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.labelText,
+                    {
+                      color,
+                      fontFamily: focused
+                        ? "banglaSemiBold"
+                        : "banglaRegular",
+                    },
+                  ]}
+                >
+                  {tab.label}
+                </Text>
               ),
-            tabBarButton: (props) => {
-              const { onPress, ...rest } = props;
-              return (
-                <View
-                  {...rest}
-                  onTouchStart={() =>
-                    handleTabPress(1, "audio-book", onPress)
-                  }
-                  style={styles.tabButton}
-                />
-              );
-            },
-          }}
-        />
-
-        {/* ---------- Favorite ---------- */}
-        <Tabs.Screen
-          name="favourite"
-          options={{
-            title: "পছন্দসমূহ",
-            tabBarIcon: ({ color }) =>
-              renderIcon(
-                activeTab === "favourite",
-                "heart",
-                "heart-outline",
-                color
-              ),
-            tabBarLabel: ({ color }) =>
-              renderLabel(
-                "পছন্দ",
-                activeTab === "favourite",
-                color
-              ),
-            tabBarButton: (props) => {
-              const { onPress, ...rest } = props;
-              return (
-                <View
-                  {...rest}
-                  onTouchStart={() =>
-                    handleTabPress(2, "favourite", onPress)
-                  }
-                  style={styles.tabButton}
-                />
-              );
-            },
-          }}
-        />
-
-        {/* ---------- Learn ---------- */}
-        <Tabs.Screen
-          name="learn-quran"
-          options={{
-            title: "কুরআন শিখুন",
-            tabBarIcon: ({ color }) =>
-              renderIcon(
-                activeTab === "learn-quran",
-                "school",
-                "school-outline",
-                color
-              ),
-            tabBarLabel: ({ color }) =>
-              renderLabel(
-                "শিখুন",
-                activeTab === "learn-quran",
-                color
-              ),
-            tabBarButton: (props) => {
-              const { onPress, ...rest } = props;
-              return (
-                <View
-                  {...rest}
-                  onTouchStart={() =>
-                    handleTabPress(3, "learn-quran", onPress)
-                  }
-                  style={styles.tabButton}
-                />
-              );
-            },
-          }}
-        />
+            }}
+          />
+        ))}
       </Tabs>
-
-      {/* Indicator */}
-      <Animated.View
-        style={[
-          styles.activeIndicator,
-          {
-            transform: [
-              {
-                translateX: indicatorAnim.interpolate({
-                  inputRange: [0, 3],
-                  outputRange: [0, 3 * tabWidth],
-                }),
-              },
-            ],
-            width: tabWidth,
-          },
-        ]}
-      >
-        <View style={styles.indicatorBar} />
-      </Animated.View>
     </>
   );
 }
@@ -263,44 +193,18 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
 
-  tabButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  iconContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-
   iconWrapper: {
     width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.1)",
   },
 
-  iconWrapperActive: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    transform: [{ scale: 1.1 }],
-  },
-
-  activeDot: {
-    position: "absolute",
-    bottom: -2,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#ffffff",
-  },
-
-  labelContainer: {
-    justifyContent: "center",
-    alignItems: "center",
+  iconPill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.22)",
   },
 
   labelText: {
@@ -308,18 +212,19 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  activeIndicator: {
+  indicator: {
     position: "absolute",
-    bottom: 68,
-    height: 3,
+    top: 0,
+    width: "25%",
     alignItems: "center",
     justifyContent: "center",
   },
 
   indicatorBar: {
     width: 40,
-    height: 2,
+    height: 3,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
     backgroundColor: "#ffffff",
-    borderRadius: 1,
   },
 });
